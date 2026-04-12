@@ -3,3 +3,16 @@ __pycache__/
 .venv/
 results.tsv
 performance.png
+
+# Ignore the data directory
+data/
+
+# Ignore the results log if it gets massive
+results.tsv
+
+# Ignore system/python junk
+__pycache__/
+.DS_Store
+
+#Ignore
+w1-workflowdiagram.html
