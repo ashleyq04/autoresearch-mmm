@@ -1,6 +1,6 @@
 """
 EDITABLE -- The agent modifies this file.
-Define the model pipeline for California Housing regression.
+Define the model pipeline for Marketing Model Mix.
 The function build_model() must return an sklearn-compatible estimator.
 """
 from sklearn.ensemble import HistGradientBoostingRegressor
