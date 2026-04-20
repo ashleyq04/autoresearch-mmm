@@ -3,15 +3,37 @@ EDITABLE -- The agent modifies this file.
 Define the model pipeline for Marketing Model Mix.
 The function build_model() must return an sklearn-compatible estimator.
 """
-from sklearn.ensemble import HistGradientBoostingRegressor
+
+
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder
 from sklearn.pipeline import Pipeline
+from sklearn.linear_model import Ridge
+
+def build_model():
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ("geo", OneHotEncoder(handle_unknown="ignore"), ["geo"]),
+        ],
+        remainder="passthrough"
+    )
+
+    return Pipeline([
+        ("preprocessor", preprocessor),
+        ("model", Ridge(alpha=1.0)),
+    ])
+
+
+
+'''
+from sklearn.linear_model import Ridge
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 
 
 def build_model():
-    """Return an sklearn Pipeline. This is what the agent improves."""
     return Pipeline([
-        ("model", HistGradientBoostingRegressor(
-            max_iter=300, max_depth=8, learning_rate=0.08,
-            min_samples_leaf=20, random_state=42,
-        )),
+        # ("scaler", StandardScaler()), removing scaling to keep in og, interpretable units 
+        ("model", Ridge(alpha=1.0)),
     ])
+'''
