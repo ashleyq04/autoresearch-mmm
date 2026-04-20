@@ -8,21 +8,21 @@ The function build_model() must return an sklearn-compatible estimator.
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.pipeline import Pipeline
-from sklearn.linear_model import Ridge
+from sklearn.linear_model import LinearRegression
+
 
 def build_model():
     preprocessor = ColumnTransformer(
         transformers=[
-            ("geo", OneHotEncoder(handle_unknown="ignore"), ["geo"]),
+            ("geo", OneHotEncoder(drop="first", handle_unknown="ignore"), ["geo"]),
         ],
-        remainder="passthrough"
+        remainder="passthrough",
     )
 
     return Pipeline([
         ("preprocessor", preprocessor),
-        ("model", Ridge(alpha=1.0)),
+        ("model", LinearRegression()),
     ])
-
 
 
 '''
