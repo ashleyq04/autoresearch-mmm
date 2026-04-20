@@ -1,4 +1,5 @@
-# AutoResearch Demo: California Housing Regression
+# AutoResearch Project: Marketing Modelling Mix
+Project Owner: Ashley Qiu
 
 A minimal, CPU-only AutoResearch project for **STAT 390** class demonstration.
 Shows the full agent loop: modify code → evaluate → keep or discard → repeat.
@@ -7,17 +8,17 @@ Shows the full agent loop: modify code → evaluate → keep or discard → repe
 
 ## Problem
 
-Predict California median house values.
+Predict geo-level revenue from marketing spend and control variables.
 **Metric**: validation RMSE (lower is better).
-**Data**: sklearn built-in California Housing (no download needed).
+**Data**: `data/geo_all_channels.csv`.
 
 ## Project Structure
 
 ```
-demo_autoresearch/
+autoresearch-mmm/
 ├── prepare.py      # FROZEN — data loading, evaluation metric, plotting
 ├── model.py        # EDITABLE — agent modifies only this file
-├── run.py          # Run a single experiment and log result
+├── run.py          # Run a single experiment and auto-label keep/discard
 ├── program.md      # Agent instructions (the agent reads this)
 ├── results.tsv     # Experiment log (auto-generated)
 └── performance.png # Performance plot (auto-generated)
@@ -53,7 +54,7 @@ winget install Anthropic.ClaudeCode
 Then launch:
 
 ```bash
-cd demo_autoresearch
+cd autoresearch-mmm
 claude
 ```
 
@@ -69,7 +70,7 @@ Docs: https://code.claude.com/docs
 npm install -g @openai/codex
 
 # Launch
-cd demo_autoresearch
+cd autoresearch-mmm
 codex
 ```
 
@@ -133,16 +134,16 @@ No GPU, no PyTorch, no heavy downloads — everything runs on CPU.
 # Quick check: all imports work
 python3 -c "import sklearn, matplotlib, numpy; print('All good')"
 
-# Full check: run one experiment
-python3 run.py "test run"
+# Full check: run one baseline experiment
+python3 run.py --baseline "baseline linear model"
 # Expected output:
-#   Data: 16512 train, 4128 val, 8 features
-#   val_rmse: 0.745581
-#   val_r2:   0.575788
+#   Data: 4960 train, 1240 val, 14 features
+#   val_rmse: <number>
+#   val_r2:   <number>
 #   Result logged to results.tsv
 
 # Clean up test result
-rm -f results.tsv
+rm -f results.tsv performance.png
 ```
 
 ---
@@ -153,16 +154,16 @@ rm -f results.tsv
 
 ```
 Read program.md for your instructions, then read model.py.
-Run `python run.py "baseline"` to establish the baseline RMSE.
+Run `python run.py --baseline "baseline linear model"` to establish the baseline RMSE.
 Then enter the AutoResearch loop:
 
 1. Propose one modification to model.py (e.g., different estimator,
    feature engineering, hyperparameter change).
 2. Edit model.py with your change.
 3. Run: python run.py "<short description of what you changed>"
-4. Compare the new val_rmse to the current best.
-   - If improved: KEEP the change, note the new best.
-   - If worse: REVERT model.py to the previous version.
+4. Check the logged status in results.tsv.
+   - If status = keep: KEEP the change.
+   - If status = discard: REVERT model.py to the previous version.
 5. Repeat from step 1. Try at least 6 different ideas.
 
 After all iterations, run `python prepare.py` to generate performance.png.
@@ -174,7 +175,7 @@ Print a summary table of all experiments and which were kept vs discarded.
 ```
 You are an AutoResearch agent. Read program.md for rules.
 
-Your job: minimize val_rmse on California Housing by modifying model.py.
+Your job: minimize val_rmse on marketing-generated revenue predictions by modifying model.py.
 
 Constraints:
 - model.py must define build_model() returning an sklearn estimator
@@ -184,133 +185,17 @@ Constraints:
 Search strategy:
 1. Start with baseline (LinearRegression)
 2. Try regularized linear models (Ridge, Lasso, ElasticNet)
-3. Try feature engineering (PolynomialFeatures, interactions)
-4. Try tree ensembles (RandomForest, GradientBoosting, HistGradientBoosting)
-5. Try hyperparameter tuning on the best model so far
+3. Try transformations defined in program.md, including lag-feature selection
 
 For each experiment:
 - Run: python run.py "<description>"
-- If val_rmse improved → keep
-- If val_rmse worsened → revert model.py to previous version
+- Read the logged status from results.tsv
+- If status=keep → keep the change
+- If status=discard → revert model.py to previous version
 - Log your reasoning for each decision
 
 After finishing, run: python prepare.py
 ```
-
----
-
-## Example Agent Loop (actually executed)
-
-Below is a real agent session. The agent modified `model.py` 7 times,
-kept 5 improvements, discarded 1 regression.
-
-### Iteration 0 — Baseline
-
-```python
-# model.py
-Pipeline([("scaler", StandardScaler()), ("model", LinearRegression())])
-```
-
-```
-$ python run.py "baseline: LinearRegression + StandardScaler"
-val_rmse: 0.745581   val_r2: 0.5758
-```
-
-**BASELINE established**: RMSE = 0.7456
-
----
-
-### Iteration 1 — Ridge regression
-
-Changed `LinearRegression()` → `Ridge(alpha=1.0)`.
-
-```
-$ python run.py "Ridge(alpha=1.0)"
-val_rmse: 0.745557   val_r2: 0.5758
-```
-
-**KEEP** (marginal improvement). Best = 0.7456
-
----
-
-### Iteration 2 — Polynomial feature interactions
-
-Added `PolynomialFeatures(degree=2, interaction_only=True)` before Ridge.
-
-```
-$ python run.py "PolyFeatures(2, interaction) + Ridge"
-val_rmse: 0.703280   val_r2: 0.6226
-```
-
-**KEEP** (improved 5.7%). Best = 0.7033
-
----
-
-### Iteration 3 — Degree-3 polynomials (overshoot)
-
-Changed to `PolynomialFeatures(degree=3)` — full polynomial expansion.
-
-```
-$ python run.py "PolyFeatures(3, full) + Ridge -- risky"
-val_rmse: 4.880809   val_r2: -17.18
-```
-
-**DISCARD** (exploded). Reverted model.py back to iteration 2.
-
----
-
-### Iteration 4 — Random Forest
-
-Replaced entire pipeline with `RandomForestRegressor(n_estimators=100)`.
-
-```
-$ python run.py "RandomForest(n=100)"
-val_rmse: 0.505340   val_r2: 0.8051
-```
-
-**KEEP** (improved 28%). Best = 0.5053
-
----
-
-### Iteration 5 — Gradient Boosting
-
-Switched to `GradientBoostingRegressor(n_estimators=200, max_depth=5)`.
-
-```
-$ python run.py "GradientBoosting(n=200, depth=5, lr=0.1)"
-val_rmse: 0.473611   val_r2: 0.8288
-```
-
-**KEEP** (improved 6.3%). Best = 0.4736
-
----
-
-### Iteration 6 — HistGradientBoosting (tuned)
-
-Switched to `HistGradientBoostingRegressor(max_iter=300, max_depth=8, lr=0.08)`.
-
-```
-$ python run.py "HistGBT(iter=300, depth=8, lr=0.08)"
-val_rmse: 0.447989   val_r2: 0.8468
-```
-
-**KEEP** (improved 5.4%). Best = 0.4480
-
----
-
-### Summary
-
-| # | Model | RMSE | R² | Decision |
-|---|-------|------|----|----------|
-| 0 | LinearRegression (baseline) | 0.7456 | 0.576 | baseline |
-| 1 | Ridge(alpha=1.0) | 0.7456 | 0.576 | keep |
-| 2 | PolyFeatures(2) + Ridge | 0.7033 | 0.623 | keep |
-| 3 | PolyFeatures(3) + Ridge | 4.8808 | -17.2 | **discard** |
-| 4 | RandomForest(n=100) | 0.5053 | 0.805 | keep |
-| 5 | GradientBoosting(n=200) | 0.4736 | 0.829 | keep |
-| 6 | HistGBT(n=300, tuned) | **0.4480** | **0.847** | keep |
-
-**Total improvement: 0.7456 → 0.4480 (40% reduction in RMSE)**
 
 ---
 
@@ -328,21 +213,12 @@ This produces a two-panel chart:
 - **Bottom**: validation R² over iterations
 - **Green line**: best-so-far envelope
 
+## Current Baseline
+
+The baseline model in `model.py` is an ordinary least squares linear regression with:
+- geo fixed effects via one-hot encoding
+- current-period spend features
+- one-period lagged spend features
+- control variables for competitor sales, sentiment, and promotion
+
 ---
-
-## Adapting This for Your Own Project
-
-To use this structure for a different task:
-
-1. **Replace `prepare.py`** with your own data loading, evaluation metric, and plotting.
-   Keep it frozen — the agent must not touch it.
-
-2. **Replace `model.py`** with whatever the agent should modify
-   (model definition, hyperparameters, feature engineering, etc.).
-
-3. **Update `program.md`** with your specific rules, constraints, and search ideas.
-
-4. **Update `run.py`** if your training loop is different
-   (e.g., PyTorch instead of sklearn).
-
-The key principle: **separate what changes (model.py) from what measures (prepare.py)**.
