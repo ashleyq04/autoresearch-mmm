@@ -10,9 +10,8 @@ import matplotlib.pyplot as plt
 import csv
 import os
 
+
 # ── Constants ──────────────────────────────────────────────
-RANDOM_SEED = 42
-VAL_FRACTION = 52/156
 RESULTS_FILE = "results.tsv"
 
 # ── Data ───────────────────────────────────────────────────
@@ -20,84 +19,125 @@ def load_data():
     """
     Load and split the Google Meridian Marketing dataset.
     Target: calculated revenue (conversions * revenue_per_conversion)
-    Features: marketing channel spend and controls from national_all_channels.csv
+    Features: marketing channel spend and controls from geo_all_channels.csv
     """
     # Load the dataset from local folder
-    df = pd.read_csv("data/national_all_channels.csv")
+    df = pd.read_csv("data/geo_all_channels.csv")
     
+    # Change time column to time-series
+    df["time"] = pd.to_datetime(df["time"])
+
     # Calculate the Target Variable (Revenue) 
     # Since 'revenue' isn't a direct column, we create it manually
     df['revenue'] = df['conversions'] * df['revenue_per_conversion']
-    y = df['revenue'].values
     
     # Define features (Marketing channels + any control variables)
-    feature_cols = ['Channel0_impression', 'Channel1_impression', 
-                    'Channel2_impression','Channel3_impression',
-                    'Channel4_impression', 'Channel0_spend',
+    # baseline: spend + controls ONLY
+    feature_cols = ['geo',
+                    # 'Channel0_impression', 'Channel1_impression', 
+                    # 'Channel2_impression','Channel3_impression',
+                    # 'Channel4_impression', 
+                    'Channel0_spend',
                     'Channel1_spend','Channel2_spend','Channel3_spend',
-                    'Channel4_spend','Organic_channel0_impression',
-                    'competitor_sales_control','sentiment_score_control',
-                    'Promo'] 
-    X = df[feature_cols].values
+                    'Channel4_spend',
+                    #'Organic_channel0_impression',
+                    'competitor_sales_control','sentiment_score_control','Promo'] 
     
-    # Split into training and validation sets 
-    X_train, X_val, y_train, y_val = train_test_split(
-        X, y, test_size=VAL_FRACTION, random_state=RANDOM_SEED, shuffle=False
-    )
-    
+    # Time-based split 
+    # perform a time-based holdout, reserving the final 20% of periods for validation across all geographies
+
+    times = sorted(df["time"].unique())
+    split_idx = int(len(times) * 0.8)
+
+    train_times = times[:split_idx]
+    val_times = times[split_idx:]
+
+    train_df = df[df["time"].isin(train_times)]
+    val_df = df[df["time"].isin(val_times)]
+
+    # Create training and validation sets
+    X_train = train_df[feature_cols]
+    y_train = train_df["revenue"]
+
+    X_val = val_df[feature_cols] # validation set 
+    y_val = val_df["revenue"]
+
     return X_train, y_train, X_val, y_val, feature_cols
 
 
-
-
-
-# ── Evaluation (frozen metric with Logic Check) ─────────────
-def evaluate(model, X_val, y_val, feature_names):
+# ── Evaluation (frozen metric) ─────────────────────────────
+def evaluate(model, X_val, y_val):
     """
-    Compute metrics and enforce the Marketing Logic Check.
-    Returns: rmse, r2, aic, logic_passed
+    Compute validation metrics for the current model.
+
+    North star metric:
+        - RMSE (lower is better)
+
+    Secondary metric:
+        - R² (higher is better)
+
+    Returns:
+        rmse, r2
     """
+
+    # 1. Generate predictions on the validation set
     y_pred = model.predict(X_val)
-    mse = mean_squared_error(y_val, y_pred)
-    rmse = float(np.sqrt(mse))
-    r2 = float(r2_score(y_val, y_pred))
-    
-    # 1. Logic Check: Marketing coefficients must be >= 0
-    # We identify marketing features by looking for "spend" or "impression" in the name
-    logic_passed = True
-    
-    # Access coefficients (works for standard sklearn models)
-    # If the agent uses a Pipeline, we need to grab the last step
-    if hasattr(model, 'named_steps'):
-        coefs = model.steps[-1][1].coef_
-    else:
-        coefs = model.coef_
 
-    for name, coef in zip(feature_names, coefs):
-        is_marketing = "spend" in name.lower() or "impression" in name.lower()
-        if is_marketing and coef < 0:
-            logic_passed = False
-            break # One negative marketing coefficient is enough to fail
-    
-    # 2. AIC Calculation (North Star Metric)
-    n = len(y_val)
-    k = len(coefs) + 1 # Number of features + intercept
-    aic = n * np.log(mse) + 2 * k
-    
-    return rmse, r2, aic, logic_passed
+    # 2. Compute mean squared error
+    mse = mean_squared_error(y_val, y_pred)
+
+    # 3. Convert MSE to RMSE
+    # RMSE is the main metric because it measures prediction error
+    # on held-out data in the same units as the target variable.
+    rmse = float(np.sqrt(mse))
+
+    # 4. Compute R² as additional context
+    # R² is not the optimization target, but it is helpful for interpretation.
+    r2 = float(r2_score(y_val, y_pred))
+
+    # 5. Return the fixed evaluation outputs
+    return rmse, r2
 
 
 # ── Logging ────────────────────────────────────────────────
-def log_result(experiment_id, val_rmse, val_r2, val_aic, status, description):
-    """Append one row to results.tsv including the AIC - North Star metric."""
+def log_result(experiment_id, val_rmse, val_r2, status, description):
+    """
+    Append one experiment result to results.tsv.
+
+    Each row represents a single model run, including:
+        - experiment_id: git commit or unique identifier
+        - val_rmse: validation RMSE (north star metric)
+        - val_r2: validation R² (context metric)
+        - status: baseline / keep / discard
+        - description: short description of the experiment
+    """
+
+    # 1. Check if results file already exists
+    # If not, we will write the header first
     file_exists = os.path.exists(RESULTS_FILE)
+
+    # 2. Open file in append mode
     with open(RESULTS_FILE, "a", newline="") as f:
         writer = csv.writer(f, delimiter="\t")
+
+        # 3. Write header if file is new
         if not file_exists:
-            # Added val_aic to the header
-            writer.writerow(["experiment", "val_rmse", "val_r2", "val_aic", "status", "description"])
-        # Added val_aic to the row
-        writer.writerow([experiment_id, f"{val_rmse:.6f}", f"{val_r2:.6f}", f"{val_aic:.4f}", status, description])
+            writer.writerow([
+                "experiment",
+                "val_rmse",
+                "val_r2",
+                "status",
+                "description"
+            ])
+
+        # 4. Write experiment result row
+        writer.writerow([
+            experiment_id,
+            f"{val_rmse:.6f}",
+            f"{val_r2:.6f}",
+            status,
+            description
+        ])
 
 
 # ── Plotting ───────────────────────────────────────────────
