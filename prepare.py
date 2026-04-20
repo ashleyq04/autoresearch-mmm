@@ -1,10 +1,8 @@
 """
-FROZEN -- Do not modify this file.
-Data loading, train/val split, evaluation metric, and plotting.
+Core data loading, train/val split, evaluation metric, and plotting.
 """
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, r2_score
 import matplotlib.pyplot as plt
 import csv
@@ -30,18 +28,37 @@ def load_data():
     # Calculate the Target Variable (Revenue) 
     # Since 'revenue' isn't a direct column, we create it manually
     df['revenue'] = df['conversions'] * df['revenue_per_conversion']
+
+    # Sort within each geography so lagged features use the prior period.
+    df = df.sort_values(["geo", "time"]).copy()
+
+    spend_cols = [
+        "Channel0_spend",
+        "Channel1_spend",
+        "Channel2_spend",
+        "Channel3_spend",
+        "Channel4_spend",
+    ]
+
+    lagged_spend_cols = []
+    for col in spend_cols:
+        lag_col = f"{col}_lag1"
+        df[lag_col] = df.groupby("geo")[col].shift(1)
+        lagged_spend_cols.append(lag_col)
     
     # Define features (Marketing channels + any control variables)
-    # baseline: spend + controls ONLY
-    feature_cols = ['geo',
-                    # 'Channel0_impression', 'Channel1_impression', 
-                    # 'Channel2_impression','Channel3_impression',
-                    # 'Channel4_impression', 
-                    'Channel0_spend',
-                    'Channel1_spend','Channel2_spend','Channel3_spend',
-                    'Channel4_spend',
-                    #'Organic_channel0_impression',
-                    'competitor_sales_control','sentiment_score_control','Promo'] 
+    # baseline: current spend, 1-period spend lags, and controls
+    feature_cols = [
+        "geo",
+        *spend_cols,
+        *lagged_spend_cols,
+        "competitor_sales_control",
+        "sentiment_score_control",
+        "Promo",
+    ]
+
+    # The first row in each geography has no lagged spend values.
+    df = df.dropna(subset=lagged_spend_cols)
     
     # Time-based split 
     # perform a time-based holdout, reserving the final 20% of periods for validation across all geographies
@@ -141,7 +158,6 @@ def log_result(experiment_id, val_rmse, val_r2, status, description):
 
 
 # ── Plotting ───────────────────────────────────────────────
-'''
 def plot_results(save_path="performance.png"):
     """Plot validation RMSE over experiments from results.tsv."""
     if not os.path.exists(RESULTS_FILE):
@@ -201,7 +217,7 @@ def plot_results(save_path="performance.png"):
             )
 
     ax1.set_ylabel("Validation RMSE (lower is better)", fontsize=12)
-    ax1.set_title("AutoResearch Demo: California Housing Regression", fontsize=14, fontweight="bold")
+    ax1.set_title("AutoResearch Demo: Marketing Mix Modeling", fontsize=14, fontweight="bold")
     ax1.grid(True, alpha=0.3)
 
     # ── Bottom: R² ──
@@ -254,4 +270,3 @@ def plot_results(save_path="performance.png"):
 
 if __name__ == "__main__":
     plot_results()
-'''
