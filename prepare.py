@@ -7,10 +7,74 @@ from sklearn.metrics import mean_squared_error, r2_score
 import matplotlib.pyplot as plt
 import csv
 import os
+import re
 
 
 # ── Constants ──────────────────────────────────────────────
-RESULTS_FILE = "results.tsv"
+SESSION_MARKER_FILE = ".current_session"
+RESULTS_FILE_TEMPLATE = "results_{session_id}.tsv"
+PERFORMANCE_FILE_TEMPLATE = "performance_{session_id}.png"
+
+
+def _list_session_ids():
+    pattern = re.compile(r"^results_(\d+)\.tsv$")
+    session_ids = []
+    for filename in os.listdir("."):
+        match = pattern.match(filename)
+        if match:
+            session_ids.append(int(match.group(1)))
+    return sorted(session_ids)
+
+
+def get_current_session_id():
+    if not os.path.exists(SESSION_MARKER_FILE):
+        return None
+
+    with open(SESSION_MARKER_FILE) as f:
+        session_id = f.read().strip()
+
+    return int(session_id) if session_id.isdigit() else None
+
+
+def set_current_session_id(session_id):
+    with open(SESSION_MARKER_FILE, "w") as f:
+        f.write(str(session_id))
+
+
+def start_new_session():
+    existing_ids = _list_session_ids()
+    session_id = 1 if not existing_ids else max(existing_ids) + 1
+    set_current_session_id(session_id)
+    return session_id
+
+
+def resolve_session_id(create=False):
+    session_id = get_current_session_id()
+    if session_id is not None:
+        return session_id
+
+    existing_ids = _list_session_ids()
+    if existing_ids and not create:
+        return max(existing_ids)
+
+    if create:
+        return start_new_session()
+
+    return None
+
+
+def get_results_file(session_id=None, create=False):
+    session_id = resolve_session_id(create=create) if session_id is None else session_id
+    if session_id is None:
+        return None
+    return RESULTS_FILE_TEMPLATE.format(session_id=session_id)
+
+
+def get_performance_file(session_id=None, create=False):
+    session_id = resolve_session_id(create=create) if session_id is None else session_id
+    if session_id is None:
+        return None
+    return PERFORMANCE_FILE_TEMPLATE.format(session_id=session_id)
 
 # ── Data ───────────────────────────────────────────────────
 def load_data():
@@ -117,9 +181,18 @@ def evaluate(model, X_val, y_val):
 
 
 # ── Logging ────────────────────────────────────────────────
-def log_result(experiment_id, val_rmse, val_r2, status, description):
+def log_result(
+    experiment_id,
+    val_rmse,
+    val_r2,
+    status,
+    description,
+    runtime_sec,
+    train_time_sec,
+    results_file=None,
+):
     """
-    Append one experiment result to results.tsv.
+    Append one experiment result to the active session results file.
 
     Each row represents a single model run, including:
         - experiment_id: git commit or unique identifier
@@ -127,14 +200,17 @@ def log_result(experiment_id, val_rmse, val_r2, status, description):
         - val_r2: validation R² (context metric)
         - status: baseline / keep / discard
         - description: short description of the experiment
+        - runtime_sec: total runtime for the iteration
+        - train_time_sec: runtime for model.fit()
     """
+    results_file = results_file or get_results_file(create=True)
 
     # 1. Check if results file already exists
     # If not, we will write the header first
-    file_exists = os.path.exists(RESULTS_FILE)
+    file_exists = os.path.exists(results_file)
 
     # 2. Open file in append mode
-    with open(RESULTS_FILE, "a", newline="") as f:
+    with open(results_file, "a", newline="") as f:
         writer = csv.writer(f, delimiter="\t")
 
         # 3. Write header if file is new
@@ -144,7 +220,9 @@ def log_result(experiment_id, val_rmse, val_r2, status, description):
                 "val_rmse",
                 "val_r2",
                 "status",
-                "description"
+                "description",
+                "runtime_sec",
+                "train_time_sec",
             ])
 
         # 4. Write experiment result row
@@ -153,19 +231,23 @@ def log_result(experiment_id, val_rmse, val_r2, status, description):
             f"{val_rmse:.6f}",
             f"{val_r2:.6f}",
             status,
-            description
+            description,
+            f"{runtime_sec:.6f}",
+            f"{train_time_sec:.6f}",
         ])
 
 
 # ── Plotting ───────────────────────────────────────────────
-def plot_results(save_path="performance.png"):
-    """Plot validation RMSE over experiments from results.tsv."""
-    if not os.path.exists(RESULTS_FILE):
-        print("No results.tsv found. Run some experiments first.")
+def plot_results(results_file=None, save_path=None):
+    """Plot validation RMSE over experiments from the active session results file."""
+    results_file = results_file or get_results_file()
+    if results_file is None or not os.path.exists(results_file):
+        print("No session results file found. Run a baseline first.")
         return
 
+    save_path = save_path or get_performance_file()
     experiments, rmses, r2s, statuses, descriptions = [], [], [], [], []
-    with open(RESULTS_FILE) as f:
+    with open(results_file) as f:
         reader = csv.DictReader(f, delimiter="\t")
         for row in reader:
             experiments.append(row["experiment"])
