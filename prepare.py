@@ -76,6 +76,14 @@ def get_performance_file(session_id=None, create=False):
         return None
     return PERFORMANCE_FILE_TEMPLATE.format(session_id=session_id)
 
+
+def _adstock(series, decay):
+    values = series.to_numpy(dtype=float)
+    out = np.zeros_like(values)
+    for i, value in enumerate(values):
+        out[i] = value if i == 0 else value + decay * out[i - 1]
+    return out
+
 # ── Data ───────────────────────────────────────────────────
 def load_data():
     """
@@ -104,11 +112,29 @@ def load_data():
         "Channel4_spend",
     ]
 
+    # Frozen seasonality controls: simple weekly cycle.
+    week_of_year = df["time"].dt.isocalendar().week.astype(float)
+    df["week_sin"] = np.sin(2 * np.pi * week_of_year / 52.0)
+    df["week_cos"] = np.cos(2 * np.pi * week_of_year / 52.0)
+
     lagged_spend_cols = []
     for col in spend_cols:
         lag_col = f"{col}_lag1"
         df[lag_col] = df.groupby("geo")[col].shift(1)
         lagged_spend_cols.append(lag_col)
+
+    # Frozen MMM-style candidate library for model.py to choose from.
+    log_spend_cols = []
+    adstock_cols = []
+    for col in spend_cols:
+        log_col = f"{col}_log1p"
+        df[log_col] = np.log1p(df[col])
+        log_spend_cols.append(log_col)
+
+        for decay in (0.3, 0.7):
+            adstock_col = f"{col}_adstock_{str(decay).replace('.', '')}"
+            df[adstock_col] = df.groupby("geo")[col].transform(lambda s, d=decay: _adstock(s, d))
+            adstock_cols.append(adstock_col)
     
     # Define features (Marketing channels + any control variables)
     # baseline: current spend, 1-period spend lags, and controls
@@ -116,9 +142,13 @@ def load_data():
         "geo",
         *spend_cols,
         *lagged_spend_cols,
+        *log_spend_cols,
+        *adstock_cols,
         "competitor_sales_control",
         "sentiment_score_control",
         "Promo",
+        "week_sin",
+        "week_cos",
     ]
 
     # The first row in each geography has no lagged spend values.
