@@ -16,7 +16,9 @@ Predict geo-level revenue from marketing spend and control variables.
 ```
 autoresearch-mmm/
 ├── prepare.py      # FROZEN — data loading, evaluation metric, plotting
+├── baseline_model.py # Canonical baseline restored at the start of each session
 ├── model.py        # EDITABLE — agent modifies only this file
+├── reset_model.py  # Restore model.py back to the canonical baseline
 ├── run.py          # Run a single experiment and auto-label keep/discard
 ├── program.md      # Agent instructions (the agent reads this)
 ├── results_<n>.tsv     # Session experiment log (auto-generated)
@@ -33,7 +35,7 @@ autoresearch-mmm/
 
 ```
 Read program.md for your instructions, then read model.py.
-Run `python run.py --baseline "baseline linear model"` to establish the baseline RMSE.
+Run `python run.py --baseline "baseline linear model"` to restore the baseline and establish the baseline RMSE.
 Then enter the AutoResearch loop:
 
 1. Propose one modification to model.py (e.g., different estimator,

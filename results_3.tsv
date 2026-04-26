@@ -1,0 +1,9 @@
+experiment	val_rmse	val_r2	status	description	runtime_sec	train_time_sec
+19653ee	73397.180606	0.656884	baseline	baseline linear model	0.160332	0.017902
+19653ee	69820.119012	0.689513	keep	bounded linear baseline with nonnegative spend effects	0.183643	0.054007
+19653ee	69809.143317	0.689611	keep	drop Channel2 lag from bounded baseline	0.156905	0.038747
+19653ee	69919.217000	0.688631	discard	log current spend with linear lag terms	0.147482	0.029319
+19653ee	69700.074860	0.690580	keep	replace lag terms with adstock decay 0.3	0.218756	0.073233
+19653ee	69643.239067	0.691084	keep	replace lag terms with adstock decay 0.7	0.480910	0.347603
+19653ee	69646.394198	0.691056	discard	use adstock decay 0.7 without raw spend terms	0.137464	0.019973
+19653ee	69688.253114	0.690685	discard	combine log current spend with adstock decay 0.7	0.229674	0.046315

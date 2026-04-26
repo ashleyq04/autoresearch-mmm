@@ -6,6 +6,7 @@ import os
 import sys
 import time
 import subprocess
+from pathlib import Path
 from prepare import (
     evaluate,
     get_results_file,
@@ -13,6 +14,9 @@ from prepare import (
     log_result,
     start_new_session,
 )
+
+BASELINE_MODEL_FILE = Path("baseline_model.py")
+LIVE_MODEL_FILE = Path("model.py")
 
 
 def get_git_hash():
@@ -41,6 +45,11 @@ def get_best_previous_rmse(results_file):
     return best_rmse
 
 
+def restore_baseline_model():
+    LIVE_MODEL_FILE.write_text(BASELINE_MODEL_FILE.read_text())
+    print(f"Restored {LIVE_MODEL_FILE} from {BASELINE_MODEL_FILE}")
+
+
 def main():
     run_start = time.perf_counter()
     args = sys.argv[1:]
@@ -61,6 +70,7 @@ def main():
     description = " ".join(description_parts) if description_parts else "experiment"
 
     if status == "baseline":
+        restore_baseline_model()
         session_id = start_new_session()
         results_file = get_results_file(session_id=session_id)
         print(f"Started session {session_id} -> {results_file}")
