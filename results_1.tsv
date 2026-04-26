@@ -1,0 +1,2 @@
+experiment	val_rmse	val_r2	status	description	runtime_sec	train_time_sec
+f616dc3	69991.993730	0.687983	baseline	session numbering smoke test	0.197047	0.039732
