@@ -1,7 +1,5 @@
 """
-EDITABLE -- The agent modifies this file.
-Define the model pipeline for Marketing Model Mix.
-The function build_model() must return an sklearn-compatible estimator.
+Canonical baseline model used to start each new AutoResearch session.
 """
 
 from sklearn.compose import ColumnTransformer
@@ -11,7 +9,6 @@ from sklearn.preprocessing import OneHotEncoder
 
 
 def build_model():
-    # Keep the baseline simple even though prepare.py exposes a richer feature library.
     baseline_features = [
         "Channel0_spend",
         "Channel1_spend",
