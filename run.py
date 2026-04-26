@@ -6,10 +6,13 @@ import os
 import sys
 import time
 import subprocess
-from prepare import load_data, evaluate, log_result
-
-
-RESULTS_FILE = "results.tsv"
+from prepare import (
+    evaluate,
+    get_results_file,
+    load_data,
+    log_result,
+    start_new_session,
+)
 
 
 def get_git_hash():
@@ -22,12 +25,12 @@ def get_git_hash():
         return "no-git"
 
 
-def get_best_previous_rmse():
-    if not os.path.exists(RESULTS_FILE):
+def get_best_previous_rmse(results_file):
+    if not os.path.exists(results_file):
         return None
 
     best_rmse = None
-    with open(RESULTS_FILE, newline="") as f:
+    with open(results_file, newline="") as f:
         reader = csv.DictReader(f, delimiter="\t")
         for row in reader:
             if row["status"] == "discard":
@@ -39,6 +42,7 @@ def get_best_previous_rmse():
 
 
 def main():
+    run_start = time.perf_counter()
     args = sys.argv[1:]
     status = "keep"
     description_parts = []
@@ -56,7 +60,16 @@ def main():
     
     description = " ".join(description_parts) if description_parts else "experiment"
 
-    previous_best_rmse = None if manual_override else get_best_previous_rmse()
+    if status == "baseline":
+        session_id = start_new_session()
+        results_file = get_results_file(session_id=session_id)
+        print(f"Started session {session_id} -> {results_file}")
+    else:
+        results_file = get_results_file()
+        if results_file is None:
+            results_file = get_results_file(create=True)
+
+    previous_best_rmse = None if manual_override else get_best_previous_rmse(results_file)
 
     # 1. Load data
     X_train, y_train, X_val, y_val, feature_names = load_data()
@@ -68,9 +81,9 @@ def main():
     print(f"Model: {model}")
 
     # 3. Train
-    t0 = time.time()
+    t0 = time.perf_counter()
     model.fit(X_train, y_train)
-    train_time = time.time() - t0
+    train_time = time.perf_counter() - t0
     print(f"Training time: {train_time:.2f}s")
 
     # 4. Evaluate
@@ -108,8 +121,19 @@ def main():
 
     # 6. Log
     commit = get_git_hash()
-    log_result(commit, val_rmse, val_r2, status, description)
-    print(f"Result logged to results.tsv (status={status})")
+    runtime_sec = time.perf_counter() - run_start
+    print(f"Total runtime: {runtime_sec:.2f}s")
+    log_result(
+        commit,
+        val_rmse,
+        val_r2,
+        status,
+        description,
+        runtime_sec,
+        train_time,
+        results_file=results_file,
+    )
+    print(f"Result logged to {results_file} (status={status})")
 
 
 if __name__ == "__main__":
