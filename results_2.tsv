@@ -1,0 +1,2 @@
+experiment	val_rmse	val_r2	status	description	runtime_sec	train_time_sec
+a454fb5	73397.180606	0.656884	baseline	baseline after frozen MMM feature library	0.171233	0.018156
