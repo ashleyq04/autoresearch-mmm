@@ -16,19 +16,23 @@ Minimize **validation RMSE** to optimize budget allocation insights while mainta
 ## Workflow
 
 ```
-1. Read current model.py and the results.tsv history.
-2. Propose ONE "Marketing-Safe" transformation from the library below.
-3. Edit model.py to apply the transformation within the build_model() pipeline.
-4. Run: python run.py "description of change"
-5. Check the logged status in results.tsv.
-6. If status=keep: keep the model.py change.
-7. If status=discard: revert model.py to the previous version.
-8. Repeat from step 1.
+1. Start each new AutoResearch session with `python run.py --baseline "baseline description"`.
+   This creates a new numbered session log such as `results_1.tsv`, `results_2.tsv`, etc.
+2. Read current model.py and the active session results history.
+3. Propose ONE "Marketing-Safe" transformation from the library below.
+4. Edit model.py to apply the transformation within the build_model() pipeline.
+5. Run: python run.py "description of change"
+6. Check the logged status in the active `results_<n>.tsv` file.
+7. If status=keep: keep the model.py change.
+8. If status=discard: revert model.py to the previous version.
+9. Repeat from step 2 for the next idea.
+10. Run `python prepare.py` at the end of the session to generate the matching `performance_<n>.png`.
 ```
 
-Use `python run.py --baseline "baseline description"` for the first baseline run.
+Use `python run.py --baseline "baseline description"` for the first baseline run of each session.
 For later experiments, `run.py` automatically marks the result as `keep` or `discard`
 by comparing the new RMSE with the best prior non-discard result.
+Each logged row also includes total runtime and training runtime for that iteration.
 
 ## Library of Marketing-Safe Transformations
 
