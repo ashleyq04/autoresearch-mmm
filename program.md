@@ -32,7 +32,7 @@ Interpretation rule:
 
 ```
 1. Start each new AutoResearch session with `python run.py --baseline "baseline description"`.
-   This creates a new numbered session log such as `results_1.tsv`, `results_2.tsv`, etc.
+   This first restores `model.py` from `baseline_model.py`, then creates a new numbered session log such as `results_1.tsv`, `results_2.tsv`, etc.
 2. Read current model.py and the active session results history.
 3. Propose ONE "Marketing-Safe" transformation from the library below.
 4. Edit model.py to apply the transformation within the build_model() pipeline.
@@ -45,6 +45,7 @@ Interpretation rule:
 ```
 
 Use `python run.py --baseline "baseline description"` for the first baseline run of each session.
+If you want to manually restore the canonical baseline outside the loop, run `python reset_model.py`.
 For later experiments, `run.py` automatically marks the result as `keep` or `discard`
 by comparing the new RMSE with the best prior non-discard result.
 Each logged row also includes total runtime and training runtime for that iteration.
