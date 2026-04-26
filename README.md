@@ -1,8 +1,7 @@
 # AutoResearch Project: Marketing Modelling Mix
 Project Owner: Ashley Qiu
 
-A minimal, CPU-only AutoResearch project for **STAT 390** class demonstration.
-Shows the full agent loop: modify code → evaluate → keep or discard → repeat.
+A minimal, CPU-only AutoResearch project for **STAT 390**.
 
 ---
 
