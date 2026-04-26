@@ -19,8 +19,8 @@ autoresearch-mmm/
 ├── model.py        # EDITABLE — agent modifies only this file
 ├── run.py          # Run a single experiment and auto-label keep/discard
 ├── program.md      # Agent instructions (the agent reads this)
-├── results.tsv     # Experiment log (auto-generated)
-└── performance.png # Performance plot (auto-generated)
+├── results_<n>.tsv     # Session experiment log (auto-generated)
+└── performance_<n>.png # Session performance plot (auto-generated)
 ```
 
 **Key rule**: the agent may only modify `model.py`. Everything else is frozen.
@@ -40,12 +40,12 @@ Then enter the AutoResearch loop:
    feature engineering, hyperparameter change).
 2. Edit model.py with your change.
 3. Run: python run.py "<short description of what you changed>"
-4. Check the logged status in results.tsv.
+4. Check the logged status in the active `results_<n>.tsv`.
    - If status = keep: KEEP the change.
    - If status = discard: REVERT model.py to the previous version.
 5. Repeat from step 1. Try at least 6 different ideas.
 
-After all iterations, run `python prepare.py` to generate performance.png.
+After all iterations, run `python prepare.py` to generate `performance_<n>.png`.
 Print a summary table of all experiments and which were kept vs discarded.
 ```
 
@@ -68,7 +68,7 @@ Search strategy:
 
 For each experiment:
 - Run: python run.py "<description>"
-- Read the logged status from results.tsv
+- Read the logged status from the active `results_<n>.tsv`
 - If status=keep → keep the change
 - If status=discard → revert model.py to previous version
 - Log your reasoning for each decision
@@ -84,7 +84,7 @@ After running experiments:
 
 ```bash
 python prepare.py
-# Generates performance.png from results.tsv
+# Generates performance_<n>.png from results_<n>.tsv
 ```
 
 This produces a two-panel chart:
@@ -94,10 +94,18 @@ This produces a two-panel chart:
 
 ## Current Baseline
 
-The baseline model in `model.py` is an ordinary least squares linear regression with:
+`prepare.py` now exposes a richer frozen MMM-style feature library, including:
+- raw spend
+- one-period spend lags
+- fixed-decay adstock features
+- `log1p` spend features
+- simple weekly seasonality controls
+
+The baseline model in `model.py` intentionally stays simple and uses only:
 - geo fixed effects via one-hot encoding
 - current-period spend features
 - one-period lagged spend features
 - control variables for competitor sales, sentiment, and promotion
+- simple weekly seasonality controls
 
 ---
