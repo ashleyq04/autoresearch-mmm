@@ -2,7 +2,10 @@
 
 ## Objective
 
-Minimize **validation RMSE** to optimize budget allocation insights while maintaining a linear model to preserve interpretability.
+Minimize **validation RMSE** while staying within an interpretable, business-safe marketing mix modeling specification.
+
+RMSE is the optimization target for the agent.
+Interpretability is enforced through the model class and feature constraints below, not through a separate subjective scoring rule.
 
 ## Rules
 
@@ -33,15 +36,17 @@ Interpretation rule:
 ```
 1. Start each new AutoResearch session with `python run.py --baseline "baseline description"`.
    This first restores `model.py` from `baseline_model.py`, then creates a new numbered session log such as `results_1.tsv`, `results_2.tsv`, etc.
-2. Read current model.py and the active session results history.
-3. Propose ONE "Marketing-Safe" transformation from the library below.
-4. Edit model.py to apply the transformation within the build_model() pipeline.
-5. Run: python run.py "description of change"
-6. Check the logged status in the active `results_<n>.tsv` file and inspect the printed coefficients.
-7. If RMSE improved but any spend-related coefficient is negative, treat the run as `discard` and revert `model.py`.
-8. Only if both RMSE improves and spend-related coefficients stay nonnegative, keep the change.
-9. Repeat from step 2 for the next idea.
-10. Run `python prepare.py` at the end of the session to generate the matching `performance_<n>.png`.
+2. Treat `baseline_model.py` as the stable reference specification.
+3. Treat `model.py` as the current working/champion model inside the allowed interpretable MMM search space.
+4. Read current `model.py` and the active session results history.
+5. Propose ONE "Marketing-Safe" transformation from the library below.
+6. Edit `model.py` to apply the transformation within the `build_model()` pipeline.
+7. Run: `python run.py "description of change"`
+8. Check the logged status in the active `results_<n>.tsv` file and inspect the printed coefficients.
+9. If RMSE improved but any spend-related coefficient is negative, treat the run as `discard` and revert `model.py`.
+10. Only if both RMSE improves and spend-related coefficients stay nonnegative, keep the change.
+11. Repeat from step 4 for the next idea.
+12. Run `python prepare.py` at the end of the session to generate the matching `performance_<n>.png`.
 ```
 
 Use `python run.py --baseline "baseline description"` for the first baseline run of each session.
@@ -61,7 +66,8 @@ The agent should prioritize transformations that preserve a linear model form in
 - Robust handling of outliers through fixed preprocessing transforms
 
 Baseline-vs-search-space rule:
-- Treat the current `model.py` as a simple baseline specification.
+- Treat `baseline_model.py` as the stable reference specification.
+- Treat `model.py` as the current working/champion model inside the allowed interpretable MMM search space.
 - `prepare.py` may expose richer frozen features such as seasonality, adstock, and transformed spend.
 - The agent may use those frozen features by editing `model.py`, but must not modify `prepare.py` during the loop.
 
