@@ -1,9 +1,20 @@
-# AutoResearch Project: Marketing Modelling Mix
+# AutoResearch Project: Marketing Mix Modeling
 Project Owner: Ashley Qiu
 
 A minimal, CPU-only AutoResearch project for **STAT 390**.
 
 ---
+
+## Project Goal
+
+This repository is designed as an **interpretable AutoResearch marketing mix modeling (MMM) workflow** that other marketers can adapt to their own data.
+
+The project has two levels of purpose:
+
+- **Repo-level purpose:** provide a reusable, interpretable modeling workflow for understanding how marketing spend relates to revenue.
+- **Agent-level objective:** improve validation RMSE while staying inside a constrained, interpretable MMM model class.
+
+In other words, RMSE is the optimization target for the agent, while interpretability and business usability are the design goals of the repository.
 
 ## Problem
 
@@ -15,17 +26,21 @@ Predict geo-level revenue from marketing spend and control variables.
 
 ```
 autoresearch-mmm/
-├── prepare.py      # FROZEN — data loading, evaluation metric, plotting
-├── baseline_model.py # Canonical baseline restored at the start of each session
-├── model.py        # EDITABLE — agent modifies only this file
-├── reset_model.py  # Restore model.py back to the canonical baseline
-├── run.py          # Run a single experiment and auto-label keep/discard
-├── program.md      # Agent instructions (the agent reads this)
+├── prepare.py          # FROZEN — data loading, evaluation metric, plotting
+├── baseline_model.py   # Simple interpretable reference specification
+├── model.py            # Current best editable/recommended interpretable model
+├── reset_model.py      # Restore model.py back to the canonical baseline
+├── run.py              # Run a single experiment and auto-label keep/discard
+├── program.md          # Agent instructions and search constraints
 ├── results_<n>.tsv     # Session experiment log (auto-generated)
 └── performance_<n>.png # Session performance plot (auto-generated)
 ```
 
-**Key rule**: the agent may only modify `model.py`. Everything else is frozen.
+**Key loop rule**: during AutoResearch, the agent may only modify `model.py`. Everything else is frozen.
+
+**Key distinction**:
+- `baseline_model.py` is the stable reference model for comparison and reuse.
+- `model.py` is the current best model found within the allowed interpretable MMM search space.
 
 ---
 
