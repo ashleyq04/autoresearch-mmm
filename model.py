@@ -1,5 +1,9 @@
 """
-Canonical baseline model used to start each new AutoResearch session.
+Current working/champion model for the AutoResearch MMM workflow.
+
+This file holds the latest accepted model inside the allowed
+interpretable MMM search space. It is the file the agent edits
+during the AutoResearch loop to improve validation RMSE.
 """
 
 from sklearn.compose import ColumnTransformer
