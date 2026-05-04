@@ -293,12 +293,10 @@ def plot_results(results_file=None, save_path=None):
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(11, 8), sharex=True)
 
     # ── Outlier handling: clip axes to reasonable range ──
-    rmse_sorted = sorted(rmses)
     q75 = np.percentile(rmses, 75)
     iqr = np.percentile(rmses, 75) - np.percentile(rmses, 25)
     rmse_upper = q75 + 2.5 * max(iqr, 0.1)  # generous fence
 
-    r2_sorted = sorted(r2s)
     r2_lower = max(min(r2s), np.percentile(r2s, 25) - 2.5 * max(
         np.percentile(r2s, 75) - np.percentile(r2s, 25), 0.1))
 
@@ -314,9 +312,14 @@ def plot_results(results_file=None, save_path=None):
         best_so_far.append(current_best)
     ax1.plot(range(len(rmses)), best_so_far, color="#2ecc71", linewidth=2.5, label="Best so far")
 
-    # Clip y-axis: show main range, mark outliers with arrow
+    # Clip y-axis: zoom to the observed RMSE range so small improvements are visible,
+    # while still annotating any outliers above the display fence.
     reasonable_max = min(max(rmses), rmse_upper)
-    ax1.set_ylim(min(rmses) * 0.9, reasonable_max * 1.1)
+    visible_rmse = [r for r in rmses if r <= reasonable_max]
+    rmse_min = min(visible_rmse)
+    rmse_span = max(reasonable_max - rmse_min, 1.0)
+    rmse_pad = max(rmse_span * 0.2, 5.0)
+    ax1.set_ylim(rmse_min - rmse_pad, reasonable_max + rmse_pad)
     for i, r in enumerate(rmses):
         if r > reasonable_max:
             ax1.annotate(
@@ -343,10 +346,13 @@ def plot_results(results_file=None, save_path=None):
         best_r2.append(current_best_r2)
     ax2.plot(range(len(r2s)), best_r2, color="#2ecc71", linewidth=2.5, label="Best so far")
 
-    # Clip y-axis for R²
+    # Clip y-axis for R² using a local padded range so small improvements are visible.
     reasonable_r2_min = max(min(r2s), r2_lower)
-    ax2.set_ylim(min(reasonable_r2_min * 1.1 if reasonable_r2_min < 0 else reasonable_r2_min * 0.9, -0.1),
-                 max(r2s) * 1.05 if max(r2s) > 0 else 0.1)
+    visible_r2 = [r for r in r2s if r >= reasonable_r2_min]
+    r2_max = max(visible_r2)
+    r2_span = max(r2_max - reasonable_r2_min, 0.001)
+    r2_pad = max(r2_span * 0.2, 0.0005)
+    ax2.set_ylim(reasonable_r2_min - r2_pad, r2_max + r2_pad)
     for i, r in enumerate(r2s):
         if r < reasonable_r2_min:
             ypos = ax2.get_ylim()[0] * 0.95

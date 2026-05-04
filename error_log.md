@@ -37,3 +37,25 @@ Definition: Removing important spend terms or baseline structure weakens model p
   Status: `discard`
   Category: `Redundant Feature Expansion`
   Note: Added complexity without improving over the current champion model.
+
+### Session 5
+
+- `add Channel0 lag to pruned raw-plus-adstock model`
+  Status: `discard`
+  Category: `Weak Carryover Specification`
+  Note: Adding an explicit lag on top of the accepted adstock structure worsened RMSE.
+
+- `drop raw Channel3 after switching Channel3 adstock to 0.3`
+  Status: `discard`
+  Category: `Feature Removal Oversimplification`
+  Note: Removing the remaining raw spend term did not outperform the current champion.
+
+- `use faster adstock decay 0.3 for Channel2 Channel3 and Channel4`
+  Status: `discard`
+  Category: `Weak Carryover Specification`
+  Note: Extending the shorter carryover assumption to Channel2 reduced validation performance.
+
+- `use faster adstock decay 0.3 for Channel0 Channel3 and Channel4`
+  Status: `discard`
+  Category: `Weak Carryover Specification`
+  Note: Shortening Channel0 carryover weakened the fit relative to the accepted mixed-decay model.

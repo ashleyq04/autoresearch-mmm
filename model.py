@@ -48,19 +48,15 @@ class BoundedLinearRegression(BaseEstimator, RegressorMixin):
 
 def build_model():
     spend_features = [
-        "Channel0_spend",
-        "Channel1_spend",
-        "Channel2_spend",
         "Channel3_spend",
-        "Channel4_spend",
     ]
 
     adstock_features = [
         "Channel0_spend_adstock_07",
         "Channel1_spend_adstock_07",
         "Channel2_spend_adstock_07",
-        "Channel3_spend_adstock_07",
-        "Channel4_spend_adstock_07",
+        "Channel3_spend_adstock_03",
+        "Channel4_spend_adstock_03",
     ]
 
     control_features = [

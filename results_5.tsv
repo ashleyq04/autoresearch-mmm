@@ -1,0 +1,9 @@
+experiment	val_rmse	val_r2	status	description	runtime_sec	train_time_sec
+7c0dac3	69643.239067	0.691084	baseline	session start	0.447379	0.263131
+7c0dac3	69643.239067	0.691084	keep	keep only Channel3 raw spend with adstock 0.7	0.176157	0.026674
+7c0dac3	69661.997495	0.690918	discard	add Channel0 lag to pruned raw-plus-adstock model	0.123549	0.010112
+7c0dac3	69617.369496	0.691314	keep	use faster adstock decay 0.3 for Channel3 only	0.145875	0.026438
+7c0dac3	69617.369496	0.691314	discard	drop raw Channel3 after switching Channel3 adstock to 0.3	0.105648	0.009448
+7c0dac3	69577.322385	0.691669	keep	use faster adstock decay 0.3 for Channel3 and Channel4	0.115856	0.022555
+7c0dac3	69595.681858	0.691506	discard	use faster adstock decay 0.3 for Channel2 Channel3 and Channel4	0.153936	0.028138
+7c0dac3	69617.535390	0.691312	discard	use faster adstock decay 0.3 for Channel0 Channel3 and Channel4	0.125440	0.030162
