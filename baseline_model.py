@@ -1,5 +1,12 @@
 """
-Canonical baseline model used to start each new AutoResearch session.
+Simple interpretable reference model for the AutoResearch MMM workflow.
+
+This file is the stable baseline specification:
+- it provides a transparent starting point
+- it is preserved for comparison and reuse
+- it is not necessarily the best-performing accepted model
+
+During AutoResearch, new experiments are made by editing model.py.
 """
 
 from sklearn.compose import ColumnTransformer
