@@ -32,6 +32,7 @@ autoresearch-mmm/
 ├── reset_model.py      # Restore model.py back to the canonical baseline
 ├── run.py              # Run a single experiment and auto-label keep/discard
 ├── program.md          # Agent instructions and search constraints
+├── error_log.md        # Running taxonomy of recurring model failures
 ├── results_<n>.tsv     # Session experiment log (auto-generated)
 └── performance_<n>.png # Session performance plot (auto-generated)
 ```
@@ -41,6 +42,8 @@ autoresearch-mmm/
 **Key distinction**:
 - `baseline_model.py` is the stable reference model for comparison and reuse.
 - `model.py` is the current best model found within the allowed interpretable MMM search space.
+
+`error_log.md` stores a concise running taxonomy of recurring failure modes observed across AutoResearch sessions. It summarizes patterns and lessons rather than duplicating the full experiment log in `results_<n>.tsv`.
 
 ---
 
