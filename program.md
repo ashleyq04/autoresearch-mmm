@@ -45,8 +45,9 @@ Interpretation rule:
 8. Check the logged status in the active `results_<n>.tsv` file and inspect the printed coefficients.
 9. If RMSE improved but any spend-related coefficient is negative, treat the run as `discard` and revert `model.py`.
 10. Only if both RMSE improves and spend-related coefficients stay nonnegative, keep the change.
-11. Repeat from step 4 for the next idea.
-12. Run `python prepare.py` at the end of the session to generate the matching `performance_<n>.png`.
+11. If a discarded experiment reveals a notable failure pattern, record it in `error_log.md`.
+12. Repeat from step 4 for the next idea.
+13. Run `python prepare.py` at the end of the session to generate the matching `performance_<n>.png`.
 ```
 
 Use `python run.py --baseline "baseline description"` for the first baseline run of each session.
@@ -54,6 +55,19 @@ If you want to manually restore the canonical baseline outside the loop, run `py
 For later experiments, `run.py` automatically marks the result as `keep` or `discard`
 by comparing the new RMSE with the best prior non-discard result.
 Each logged row also includes total runtime and training runtime for that iteration.
+
+## Error Logging
+
+Maintain `error_log.md` as a concise running record of recurring failure modes observed during AutoResearch.
+
+When an experiment is discarded, log it only if it adds evidence for an existing error category
+or reveals a genuinely new failure mode.
+
+Each entry in `error_log.md` should stay brief and include:
+- experiment description
+- status
+- error category
+- one-sentence note explaining the failure
 
 ## Library of Marketing-Safe Transformations
 
