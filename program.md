@@ -35,7 +35,7 @@ Interpretation rule:
 
 ```
 1. Start each new AutoResearch session with `python run.py --baseline "baseline description"`.
-   This first restores `model.py` from `baseline_model.py`, then creates a new numbered session log such as `results_1.tsv`, `results_2.tsv`, etc.
+   This creates a new numbered session log such as `results_1.tsv`, `results_2.tsv`, etc., without overwriting the current `model.py`.
 2. Treat `baseline_model.py` as the stable reference specification.
 3. Treat `model.py` as the current working/champion model inside the allowed interpretable MMM search space.
 4. Read current `model.py` and the active session results history.
@@ -50,8 +50,8 @@ Interpretation rule:
 13. Run `python prepare.py` at the end of the session to generate the matching `performance_<n>.png`.
 ```
 
-Use `python run.py --baseline "baseline description"` for the first baseline run of each session.
-If you want to manually restore the canonical baseline outside the loop, run `python reset_model.py`.
+Use `python run.py --baseline "baseline description"` to begin a new session from the current `model.py`.
+If you want to manually restore the canonical baseline before starting a session, run `python reset_model.py`.
 For later experiments, `run.py` automatically marks the result as `keep` or `discard`
 by comparing the new RMSE with the best prior non-discard result.
 Each logged row also includes total runtime and training runtime for that iteration.

@@ -1,0 +1,2 @@
+experiment	val_rmse	val_r2	status	description	runtime_sec	train_time_sec
+e60c06b	69643.239067	0.691084	baseline	session 4 baseline check	0.192056	0.063227

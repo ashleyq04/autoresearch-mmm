@@ -53,7 +53,7 @@ autoresearch-mmm/
 
 ```
 Read program.md for your instructions, then read model.py.
-Run `python run.py --baseline "baseline linear model"` to restore the baseline and establish the baseline RMSE.
+Run `python run.py --baseline "session start"` to start a new session and establish the current model's session-start RMSE.
 Then enter the AutoResearch loop:
 
 1. Propose one modification to model.py (e.g., different estimator,
@@ -82,7 +82,7 @@ Constraints:
 - Each experiment must finish in < 60 seconds
 
 Search strategy:
-1. Start with baseline (LinearRegression)
+1. Start from the current accepted model in `model.py`
 2. Try regularized linear models (Ridge, Lasso, ElasticNet)
 3. Try transformations defined in program.md, including lag-feature selection
 
@@ -112,7 +112,7 @@ This produces a two-panel chart:
 - **Bottom**: validation R² over iterations
 - **Green line**: best-so-far envelope
 
-## Current Baseline
+## Baseline vs Current Model
 
 `prepare.py` now exposes a richer frozen MMM-style feature library, including:
 - raw spend
@@ -121,11 +121,13 @@ This produces a two-panel chart:
 - `log1p` spend features
 - simple weekly seasonality controls
 
-The baseline model in `model.py` intentionally stays simple and uses only:
+The reference baseline model in `baseline_model.py` intentionally stays simple and uses only:
 - geo fixed effects via one-hot encoding
 - current-period spend features
 - one-period lagged spend features
 - control variables for competitor sales, sentiment, and promotion
 - simple weekly seasonality controls
+
+The current working model in `model.py` may differ from this baseline because it stores the latest accepted champion from the AutoResearch loop.
 
 ---
