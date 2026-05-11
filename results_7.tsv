@@ -1,0 +1,8 @@
+experiment	val_rmse	val_r2	status	description	runtime_sec	train_time_sec
+7bd3a12	69577.322385	0.691669	baseline	session start	0.230365	0.059880
+7bd3a12	71583.781845	0.673629	discard	add Promo x Channel3 adstock 0.3 interaction	0.153739	0.029250
+7bd3a12	69946.370890	0.688389	discard	apply bounded ridge shrinkage to current champion features	0.211516	0.062470
+7bd3a12	69578.455966	0.691659	discard	apply light bounded ridge shrinkage to current champion features	0.179952	0.031571
+7bd3a12	69577.322385	0.691669	discard	drop zeroed raw Channel3 spend from champion	0.162065	0.011856
+7bd3a12	69626.251523	0.691235	discard	replace Channel2 adstock 0.7 with Channel2 log1p spend	0.238064	0.085014
+7bd3a12	69452.274146	0.692776	keep	add bounded Promo x Channel4 adstock 0.3 interaction	0.250694	0.092161

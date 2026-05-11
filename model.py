@@ -46,6 +46,69 @@ class BoundedLinearRegression(BaseEstimator, RegressorMixin):
         return self.intercept_ + X @ self.coef_
 
 
+class BoundedRidgeRegression(BoundedLinearRegression):
+    def __init__(self, nonnegative_start_idx, nonnegative_feature_count, alpha=1.0):
+        super().__init__(nonnegative_start_idx, nonnegative_feature_count)
+        self.alpha = alpha
+
+    def fit(self, X, y):
+        X = self._dense(X)
+        y = np.asarray(y)
+
+        design = np.column_stack([np.ones(X.shape[0]), X])
+        lower_bounds = np.full(design.shape[1], -np.inf)
+        upper_bounds = np.full(design.shape[1], np.inf)
+
+        start = self.nonnegative_start_idx
+        stop = start + self.nonnegative_feature_count
+        lower_bounds[start + 1:stop + 1] = 0.0
+
+        penalty = np.sqrt(self.alpha) * np.eye(design.shape[1])
+        penalty[0, 0] = 0.0
+        augmented_design = np.vstack([design, penalty])
+        augmented_target = np.concatenate([y, np.zeros(design.shape[1])])
+
+        solution = lsq_linear(
+            augmented_design,
+            augmented_target,
+            bounds=(lower_bounds, upper_bounds),
+            lsmr_tol="auto",
+        )
+        self.intercept_ = solution.x[0]
+        self.coef_ = solution.x[1:]
+        return self
+
+
+class AddInteractionFeatures(BaseEstimator):
+    def __init__(self, interactions, insert_after_idx):
+        self.interactions = list(interactions)
+        self.insert_after_idx = insert_after_idx
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+        X = X.toarray() if sparse.issparse(X) else np.asarray(X, dtype=float)
+        interaction_columns = []
+        for left_idx, right_idx in self.interactions:
+            interaction_columns.append((X[:, left_idx] * X[:, right_idx]).reshape(-1, 1))
+
+        left_block = X[:, :self.insert_after_idx]
+        right_block = X[:, self.insert_after_idx:]
+        return np.hstack([left_block, *interaction_columns, right_block])
+
+    def get_feature_names_out(self, input_features=None):
+        input_features = list(input_features)
+        interaction_names = [
+            f"{input_features[left_idx]}_x_{input_features[right_idx]}"
+            for left_idx, right_idx in self.interactions
+        ]
+        return np.array(
+            input_features[:self.insert_after_idx] + interaction_names + input_features[self.insert_after_idx:],
+            dtype=object,
+        )
+
+
 def build_model():
     spend_features = [
         "Channel3_spend",
@@ -68,6 +131,15 @@ def build_model():
     ]
 
     numeric_features = spend_features + adstock_features + control_features
+    # One-hot geo columns come first, followed by numeric_features in order.
+    geo_feature_count = 39
+    media_feature_count = len(spend_features) + len(adstock_features)
+    interaction_pairs = [
+        (
+            geo_feature_count + numeric_features.index("Channel4_spend_adstock_03"),
+            geo_feature_count + numeric_features.index("Promo"),
+        ),
+    ]
 
     preprocessor = ColumnTransformer(
         transformers=[
@@ -77,16 +149,20 @@ def build_model():
         remainder="drop",
     )
 
-    # One-hot geo columns come first, followed by numeric_features in order.
-    geo_feature_count = 39
-
     return Pipeline([
         ("preprocessor", preprocessor),
+        (
+            "interactions",
+            AddInteractionFeatures(
+                interactions=interaction_pairs,
+                insert_after_idx=geo_feature_count + media_feature_count,
+            ),
+        ),
         (
             "model",
             BoundedLinearRegression(
                 nonnegative_start_idx=geo_feature_count,
-                nonnegative_feature_count=len(spend_features) + len(adstock_features),
+                nonnegative_feature_count=media_feature_count + len(interaction_pairs),
             ),
         ),
     ])

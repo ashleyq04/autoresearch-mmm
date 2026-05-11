@@ -1,0 +1,17 @@
+session_id	experiment	val_rmse	val_r2	status	description	runtime_sec	train_time_sec
+3	19653ee	73397.180606	0.656884	baseline	baseline linear model	0.160332	0.017902
+3	19653ee	69820.119012	0.689513	keep	bounded linear baseline with nonnegative spend effects	0.183643	0.054007
+3	19653ee	69809.143317	0.689611	keep	drop Channel2 lag from bounded baseline	0.156905	0.038747
+3	19653ee	69919.217000	0.688631	discard	log current spend with linear lag terms	0.147482	0.029319
+3	19653ee	69700.074860	0.690580	keep	replace lag terms with adstock decay 0.3	0.218756	0.073233
+3	19653ee	69643.239067	0.691084	keep	replace lag terms with adstock decay 0.7	0.480910	0.347603
+3	19653ee	69646.394198	0.691056	discard	use adstock decay 0.7 without raw spend terms	0.137464	0.019973
+3	19653ee	69688.253114	0.690685	discard	combine log current spend with adstock decay 0.7	0.229674	0.046315
+5	7c0dac3	69643.239067	0.691084	baseline	session start	0.447379	0.263131
+5	7c0dac3	69643.239067	0.691084	keep	keep only Channel3 raw spend with adstock 0.7	0.176157	0.026674
+5	7c0dac3	69661.997495	0.690918	discard	add Channel0 lag to pruned raw-plus-adstock model	0.123549	0.010112
+5	7c0dac3	69617.369496	0.691314	keep	use faster adstock decay 0.3 for Channel3 only	0.145875	0.026438
+5	7c0dac3	69617.369496	0.691314	discard	drop raw Channel3 after switching Channel3 adstock to 0.3	0.105648	0.009448
+5	7c0dac3	69577.322385	0.691669	keep	use faster adstock decay 0.3 for Channel3 and Channel4	0.115856	0.022555
+5	7c0dac3	69595.681858	0.691506	discard	use faster adstock decay 0.3 for Channel2 Channel3 and Channel4	0.153936	0.028138
+5	7c0dac3	69617.535390	0.691312	discard	use faster adstock decay 0.3 for Channel0 Channel3 and Channel4	0.125440	0.030162

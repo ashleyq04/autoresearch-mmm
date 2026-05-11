@@ -34,7 +34,9 @@ autoresearch-mmm/
 ├── program.md          # Agent instructions and search constraints
 ├── error_log.md        # Running taxonomy of recurring model failures
 ├── results_<n>.tsv     # Session experiment log (auto-generated)
-└── performance_<n>.png # Session performance plot (auto-generated)
+├── performance_<n>.png # Session performance plot (auto-generated)
+├── results_cumulative.tsv    # Curated combined results across selected sessions
+└── performance_cumulative.png # Curated combined performance plot
 ```
 
 **Key loop rule**: during AutoResearch, the agent may only modify `model.py`. Everything else is frozen.
@@ -44,6 +46,25 @@ autoresearch-mmm/
 - `model.py` is the current best model found within the allowed interpretable MMM search space.
 
 `error_log.md` stores a concise running taxonomy of recurring failure modes observed across AutoResearch sessions. It summarizes patterns and lessons rather than duplicating the full experiment log in `results_<n>.tsv`.
+
+## Agent Rule Update
+
+The agent search rules in [program.md](/Users/ashley/Documents/NU/Fourth_Year/STAT390/autoresearch-mmm/program.md) were expanded **after Session 6**.
+
+Starting in **Session 7**, the agent is allowed to search a slightly broader but still interpretable MMM space inside `model.py`, including:
+- more systematic feature subset search over the frozen feature library
+- constrained regularized linear specifications
+- a small number of business-safe promotion-media interactions
+- fixed outlier-robust preprocessing
+
+This update does **not** reset the project baseline:
+- `baseline_model.py` remains the historical simple reference model
+- `model.py` remains the current working champion
+- `prepare.py`, the dataset, the split, and the evaluation metric remain frozen
+
+As a result, Sessions 1-6 should be interpreted as runs under the original narrower agent rules, while Session 7 onward uses the revised search guidance.
+
+Session 7 is also a transition point in a second sense: it was the first session allowed to try custom promotion-media interaction features inside `model.py`. That session found a better-RMSE model, but it also showed that a custom post-preprocessor feature can make coefficient reporting harder to audit with the existing frozen `run.py` output. For that reason, the agent rules were tightened again after Session 7 so future sessions must preserve a clear, recoverable mapping between each final engineered feature and its coefficient before a model can be kept.
 
 ---
 
@@ -83,8 +104,8 @@ Constraints:
 
 Search strategy:
 1. Start from the current accepted model in `model.py`
-2. Try regularized linear models (Ridge, Lasso, ElasticNet)
-3. Try transformations defined in program.md, including lag-feature selection
+2. Try regularized linear models and constrained shrinkage if they remain interpretable
+3. Try transformations defined in program.md, including systematic feature selection and approved promotion-media interactions
 
 For each experiment:
 - Run: python run.py "<description>"
@@ -105,6 +126,13 @@ After running experiments:
 ```bash
 python prepare.py
 # Generates performance_<n>.png from results_<n>.tsv
+```
+
+To build the curated cumulative view across the selected meaningful sessions:
+
+```bash
+python -c "from prepare import build_cumulative_artifacts; build_cumulative_artifacts()"
+# Generates results_cumulative.tsv and performance_cumulative.png
 ```
 
 This produces a two-panel chart:

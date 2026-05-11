@@ -1,0 +1,9 @@
+experiment	val_rmse	val_r2	status	description	runtime_sec	train_time_sec
+7bd3a12	69577.322385	0.691669	baseline	session start	0.391934	0.029171
+7bd3a12	69577.322385	0.691669	discard	add raw Channel2 spend to mixed adstock champion	0.224430	0.069759
+7bd3a12	69577.322385	0.691669	discard	add raw Channel4 spend to mixed adstock champion	0.156321	0.032526
+7bd3a12	69577.322385	0.691669	discard	add raw Channel1 spend to mixed adstock champion	0.153081	0.027752
+7bd3a12	69611.630546	0.691365	discard	add Channel2 lag on top of Channel2 adstock 0.7	0.235560	0.077023
+7bd3a12	69618.959683	0.691300	discard	use faster adstock decay 0.3 for Channel1	0.162259	0.023806
+7bd3a12	69617.369496	0.691314	discard	use slower adstock decay 0.7 for Channel4	0.236283	0.088487
+7bd3a12	69577.322385	0.691669	discard	replace raw Channel3 spend with log1p Channel3 spend	0.186636	0.032714

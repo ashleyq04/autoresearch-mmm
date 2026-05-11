@@ -16,19 +16,24 @@ Interpretability is enforced through the model class and feature constraints bel
 5. Training + evaluation must complete in **under 60 seconds** on CPU
 6. No additional data sources or external downloads
 7. A model is only eligible to be kept if all marketing spend effects remain nonnegative.
+8. Interpretability should favor business-readable MMM structure over feature sprawl: use only a small number of clearly explainable media terms and interactions.
+9. Any engineered feature added beyond the frozen preprocessor output must preserve a clear, recoverable mapping between the final feature name and its fitted coefficient.
 
 ## Acceptance Criteria
 
 A model change can be kept only if **both** conditions hold:
 
 1. Validation RMSE improves over the best prior non-discard result.
-2. All marketing spend and lagged spend coefficients are nonnegative.
+2. All media-derived coefficients are nonnegative.
+3. Any engineered post-preprocessor feature remains traceable enough for unambiguous sign checks and final interpretation.
 
 If either condition fails, discard the change and revert `model.py`.
 
 Interpretation rule:
-- Negative coefficients on `Channel*_spend` or `Channel*_spend_lag1` are not allowed.
-- If a transformation changes the feature names, the corresponding transformed spend features must still remain nonnegative.
+- Negative coefficients on media-derived features are not allowed.
+- Media-derived features include raw spend, lagged spend, log-transformed spend, adstock spend, and any approved media interaction terms.
+- If a transformation changes the feature names, the corresponding transformed media features must still remain nonnegative.
+- Do not keep a model if the final engineered features cannot be mapped cleanly to coefficient names.
 - Prefer model specifications that enforce this structurally rather than checking it after fitting.
 
 ## Workflow
@@ -43,11 +48,12 @@ Interpretation rule:
 6. Edit `model.py` to apply the transformation within the `build_model()` pipeline.
 7. Run: `python run.py "description of change"`
 8. Check the logged status in the active `results_<n>.tsv` file and inspect the printed coefficients.
-9. If RMSE improved but any spend-related coefficient is negative, treat the run as `discard` and revert `model.py`.
-10. Only if both RMSE improves and spend-related coefficients stay nonnegative, keep the change.
-11. If a discarded experiment reveals a notable failure pattern, record it in `error_log.md`.
-12. Repeat from step 4 for the next idea.
-13. Run `python prepare.py` at the end of the session to generate the matching `performance_<n>.png`.
+9. If RMSE improved but any media-related coefficient is negative, treat the run as `discard` and revert `model.py`.
+10. If RMSE improved but the final engineered features cannot be mapped unambiguously to their coefficients for sign checks and interpretation, treat the run as `discard` and revert `model.py`.
+11. Only if RMSE improves, media-related coefficients stay nonnegative, and the final feature-to-coefficient mapping remains clear, keep the change.
+12. If a discarded experiment reveals a notable failure pattern, record it in `error_log.md`.
+13. Repeat from step 4 for the next idea.
+14. Run `python prepare.py` at the end of the session to generate the matching `performance_<n>.png`.
 ```
 
 Use `python run.py --baseline "baseline description"` to begin a new session from the current `model.py`.
@@ -74,10 +80,22 @@ Each entry in `error_log.md` should stay brief and include:
 The agent should prioritize transformations that preserve a linear model form in the final estimator:
 
 - Feature selection over the frozen MMM feature library exposed by `prepare.py`
-- Pairwise interaction terms between existing predictors
-- Log transforms of spend variables
-- Simple feature selection among the existing predictors
+- Channel-specific selection among existing lag, log, and adstock features
+- Constrained regularized linear models, if media-related sign constraints remain satisfied
+- A small number of business-safe interaction terms
 - Robust handling of outliers through fixed preprocessing transforms
+
+Approved business-safe interactions:
+- `Promo x Channel*_spend`
+- `Promo x Channel*_spend_lag1`
+- `Promo x Channel*_spend_log1p`
+- `Promo x Channel*_spend_adstock_*`
+
+Interaction guardrails:
+- Keep interactions sparse and easy to explain.
+- Do not create broad interaction explosions across all variables.
+- Do not introduce cross-channel interactions unless there is a clear business justification and the resulting model remains concise.
+- Do not keep an interaction-based model unless the final interaction term name and coefficient can still be recovered unambiguously.
 
 Baseline-vs-search-space rule:
 - Treat `baseline_model.py` as the stable reference specification.
@@ -86,6 +104,22 @@ Baseline-vs-search-space rule:
 - The agent may use those frozen features by editing `model.py`, but must not modify `prepare.py` during the loop.
 
 Do not use transformations that require direct access to raw time or geo columns unless those features are already provided by prepare.py.
+
+Search priority:
+1. Systematic feature subset search over the frozen MMM feature library
+2. Constrained regularization or coefficient shrinkage
+3. Channel-specific carryover selection
+4. Approved media-promotion interactions
+5. Fixed outlier-robust preprocessing
+
+Complexity preference:
+- Prefer the simpler admissible model when RMSE gains are negligible.
+- Avoid adding multiple new media terms at once unless the current experiment is explicitly testing a focused bundled idea.
+
+Traceability requirement:
+- Prefer transformations that stay inside the preprocessor feature library whenever possible.
+- If a post-preprocessor custom feature is added, it must preserve recoverable final feature names for coefficient inspection.
+- Do not rely on guessed coefficient ordering when checking admissibility.
 
 ## What NOT to do
 

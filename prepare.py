@@ -14,6 +14,9 @@ import re
 SESSION_MARKER_FILE = ".current_session"
 RESULTS_FILE_TEMPLATE = "results_{session_id}.tsv"
 PERFORMANCE_FILE_TEMPLATE = "performance_{session_id}.png"
+CURATED_CUMULATIVE_SESSIONS = [3, 5]
+CURATED_CUMULATIVE_RESULTS_FILE = "results_cumulative.tsv"
+CURATED_CUMULATIVE_PERFORMANCE_FILE = "performance_cumulative.png"
 
 
 def _list_session_ids():
@@ -75,6 +78,59 @@ def get_performance_file(session_id=None, create=False):
     if session_id is None:
         return None
     return PERFORMANCE_FILE_TEMPLATE.format(session_id=session_id)
+
+
+def build_cumulative_results(session_ids=None, save_path=None):
+    """
+    Combine selected session result files into one curated cumulative results file.
+    """
+    session_ids = CURATED_CUMULATIVE_SESSIONS if session_ids is None else session_ids
+    save_path = save_path or CURATED_CUMULATIVE_RESULTS_FILE
+
+    rows = []
+    for session_id in session_ids:
+        results_file = get_results_file(session_id=session_id)
+        if results_file is None or not os.path.exists(results_file):
+            continue
+
+        with open(results_file) as f:
+            reader = csv.DictReader(f, delimiter="\t")
+            for row in reader:
+                rows.append({
+                    "session_id": str(session_id),
+                    **row,
+                })
+
+    if not rows:
+        print("No curated session results found to combine.")
+        return None
+
+    with open(save_path, "w", newline="") as f:
+        writer = csv.writer(f, delimiter="\t")
+        writer.writerow([
+            "session_id",
+            "experiment",
+            "val_rmse",
+            "val_r2",
+            "status",
+            "description",
+            "runtime_sec",
+            "train_time_sec",
+        ])
+        for row in rows:
+            writer.writerow([
+                row["session_id"],
+                row["experiment"],
+                row["val_rmse"],
+                row["val_r2"],
+                row["status"],
+                row["description"],
+                row["runtime_sec"],
+                row["train_time_sec"],
+            ])
+
+    print(f"Saved {save_path}")
+    return save_path
 
 
 def _adstock(series, decay):
@@ -384,6 +440,23 @@ def plot_results(results_file=None, save_path=None):
     plt.tight_layout()
     plt.savefig(save_path, dpi=150, bbox_inches="tight")
     print(f"Saved {save_path}")
+
+
+def build_cumulative_artifacts(session_ids=None, results_path=None, plot_path=None):
+    """
+    Build curated cumulative results and the matching performance plot.
+    """
+    results_path = build_cumulative_results(
+        session_ids=session_ids,
+        save_path=results_path or CURATED_CUMULATIVE_RESULTS_FILE,
+    )
+    if results_path is None:
+        return
+
+    plot_results(
+        results_file=results_path,
+        save_path=plot_path or CURATED_CUMULATIVE_PERFORMANCE_FILE,
+    )
 
 
 if __name__ == "__main__":

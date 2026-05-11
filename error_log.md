@@ -59,3 +59,10 @@ Definition: Removing important spend terms or baseline structure weakens model p
   Status: `discard`
   Category: `Weak Carryover Specification`
   Note: Shortening Channel0 carryover weakened the fit relative to the accepted mixed-decay model.
+
+### Session 6
+
+- `add raw Channel1 spend to mixed adstock champion`
+  Status: `discard`
+  Category: `Redundant Feature Expansion`
+  Note: The added raw spend term was driven to a zero coefficient and left validation RMSE unchanged, reinforcing that the current adstock basis already absorbs that signal.
