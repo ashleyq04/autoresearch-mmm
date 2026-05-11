@@ -1,0 +1,8 @@
+experiment	val_rmse	val_r2	status	description	runtime_sec	train_time_sec
+9df8b03	69452.274146	0.692776	baseline	session start	0.192008	0.036203
+9df8b03	69452.274146	0.692776	keep	drop zeroed raw Channel3 spend from interaction champion	0.153686	0.011303
+9df8b03	69460.800440	0.692701	discard	replace Channel3 adstock 0.3 with Channel3 log1p spend in interaction champion	0.155779	0.030616
+9df8b03	69452.426437	0.692775	discard	apply very light bounded ridge shrinkage to interaction champion	0.140011	0.015146
+9df8b03	69595.304294	0.691509	discard	use Channel4 log1p spend with bounded Promo interaction	0.138475	0.013849
+9df8b03	69469.963018	0.692620	discard	add bounded Promo x Channel3 adstock 0.3 alongside Channel4 interaction	0.275806	0.124280
+9df8b03	69466.961286	0.692646	discard	use Channel4 adstock 0.7 with bounded Promo interaction	0.134731	0.011657

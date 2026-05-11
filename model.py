@@ -110,9 +110,7 @@ class AddInteractionFeatures(BaseEstimator):
 
 
 def build_model():
-    spend_features = [
-        "Channel3_spend",
-    ]
+    spend_features = []
 
     adstock_features = [
         "Channel0_spend_adstock_07",
