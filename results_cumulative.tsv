@@ -15,3 +15,17 @@ session_id	experiment	val_rmse	val_r2	status	description	runtime_sec	train_time_
 5	7c0dac3	69577.322385	0.691669	keep	use faster adstock decay 0.3 for Channel3 and Channel4	0.115856	0.022555
 5	7c0dac3	69595.681858	0.691506	discard	use faster adstock decay 0.3 for Channel2 Channel3 and Channel4	0.153936	0.028138
 5	7c0dac3	69617.535390	0.691312	discard	use faster adstock decay 0.3 for Channel0 Channel3 and Channel4	0.125440	0.030162
+7	7bd3a12	69577.322385	0.691669	baseline	session start	0.230365	0.059880
+7	7bd3a12	71583.781845	0.673629	discard	add Promo x Channel3 adstock 0.3 interaction	0.153739	0.029250
+7	7bd3a12	69946.370890	0.688389	discard	apply bounded ridge shrinkage to current champion features	0.211516	0.062470
+7	7bd3a12	69578.455966	0.691659	discard	apply light bounded ridge shrinkage to current champion features	0.179952	0.031571
+7	7bd3a12	69577.322385	0.691669	discard	drop zeroed raw Channel3 spend from champion	0.162065	0.011856
+7	7bd3a12	69626.251523	0.691235	discard	replace Channel2 adstock 0.7 with Channel2 log1p spend	0.238064	0.085014
+7	7bd3a12	69452.274146	0.692776	keep	add bounded Promo x Channel4 adstock 0.3 interaction	0.250694	0.092161
+8	9df8b03	69452.274146	0.692776	baseline	session start	0.192008	0.036203
+8	9df8b03	69452.274146	0.692776	keep	drop zeroed raw Channel3 spend from interaction champion	0.153686	0.011303
+8	9df8b03	69460.800440	0.692701	discard	replace Channel3 adstock 0.3 with Channel3 log1p spend in interaction champion	0.155779	0.030616
+8	9df8b03	69452.426437	0.692775	discard	apply very light bounded ridge shrinkage to interaction champion	0.140011	0.015146
+8	9df8b03	69595.304294	0.691509	discard	use Channel4 log1p spend with bounded Promo interaction	0.138475	0.013849
+8	9df8b03	69469.963018	0.692620	discard	add bounded Promo x Channel3 adstock 0.3 alongside Channel4 interaction	0.275806	0.124280
+8	9df8b03	69466.961286	0.692646	discard	use Channel4 adstock 0.7 with bounded Promo interaction	0.134731	0.011657

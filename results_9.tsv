@@ -1,0 +1,8 @@
+experiment	val_rmse	val_r2	status	description	runtime_sec	train_time_sec
+77c02f2	69452.274146	0.692776	baseline	session start	0.144246	0.013932
+77c02f2	69477.363673	0.692554	discard	drop week_cos from interaction champion	0.240687	0.079117
+77c02f2	69507.472514	0.692288	discard	drop week_sin from interaction champion	0.191304	0.014510
+77c02f2	69512.755705	0.692241	discard	replace Channel1 adstock 0.7 with Channel1 log1p spend	0.165015	0.013052
+77c02f2	69456.111897	0.692742	discard	replace Channel0 adstock 0.7 with Channel0 log1p spend	0.157690	0.012285
+77c02f2	69369.566914	0.693507	keep	drop sentiment control from interaction champion	0.186030	0.038499
+77c02f2	69369.566914	0.693507	keep	drop zeroed Channel3 adstock from no-sentiment interaction champion	0.176076	0.027213

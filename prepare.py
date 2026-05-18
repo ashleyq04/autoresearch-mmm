@@ -14,7 +14,7 @@ import re
 SESSION_MARKER_FILE = ".current_session"
 RESULTS_FILE_TEMPLATE = "results_{session_id}.tsv"
 PERFORMANCE_FILE_TEMPLATE = "performance_{session_id}.png"
-CURATED_CUMULATIVE_SESSIONS = [3, 5]
+CURATED_CUMULATIVE_SESSIONS = [3, 5, 7, 8]
 CURATED_CUMULATIVE_RESULTS_FILE = "results_cumulative.tsv"
 CURATED_CUMULATIVE_PERFORMANCE_FILE = "performance_cumulative.png"
 

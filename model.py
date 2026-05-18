@@ -116,13 +116,11 @@ def build_model():
         "Channel0_spend_adstock_07",
         "Channel1_spend_adstock_07",
         "Channel2_spend_adstock_07",
-        "Channel3_spend_adstock_03",
         "Channel4_spend_adstock_03",
     ]
 
     control_features = [
         "competitor_sales_control",
-        "sentiment_score_control",
         "Promo",
         "week_sin",
         "week_cos",
