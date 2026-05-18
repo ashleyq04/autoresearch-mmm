@@ -29,3 +29,18 @@ session_id	experiment	val_rmse	val_r2	status	description	runtime_sec	train_time_
 8	9df8b03	69595.304294	0.691509	discard	use Channel4 log1p spend with bounded Promo interaction	0.138475	0.013849
 8	9df8b03	69469.963018	0.692620	discard	add bounded Promo x Channel3 adstock 0.3 alongside Channel4 interaction	0.275806	0.124280
 8	9df8b03	69466.961286	0.692646	discard	use Channel4 adstock 0.7 with bounded Promo interaction	0.134731	0.011657
+9	77c02f2	69452.274146	0.692776	baseline	session start	0.144246	0.013932
+9	77c02f2	69477.363673	0.692554	discard	drop week_cos from interaction champion	0.240687	0.079117
+9	77c02f2	69507.472514	0.692288	discard	drop week_sin from interaction champion	0.191304	0.014510
+9	77c02f2	69512.755705	0.692241	discard	replace Channel1 adstock 0.7 with Channel1 log1p spend	0.165015	0.013052
+9	77c02f2	69456.111897	0.692742	discard	replace Channel0 adstock 0.7 with Channel0 log1p spend	0.157690	0.012285
+9	77c02f2	69369.566914	0.693507	keep	drop sentiment control from interaction champion	0.186030	0.038499
+9	77c02f2	69369.566914	0.693507	keep	drop zeroed Channel3 adstock from no-sentiment interaction champion	0.176076	0.027213
+10	367435e	69369.566914	0.693507	baseline	session start	0.202389	0.042415
+10	367435e	69460.800440	0.692701	discard	reintroduce sentiment control to current interaction champion	0.168990	0.014422
+10	367435e	69368.834798	0.693514	keep	apply very light bounded ridge to no-sentiment interaction champion	0.173380	0.026502
+10	367435e	69367.065355	0.693530	keep	increase bounded ridge strength on no-sentiment interaction champion	0.184201	0.038404
+10	367435e	69373.629977	0.693472	discard	increase bounded ridge strength further on no-sentiment interaction champion	0.169741	0.029826
+10	367435e	69367.720442	0.693524	discard	slightly reduce bounded ridge strength on no-sentiment interaction champion	0.248166	0.065172
+10	367435e	69399.533295	0.693243	discard	add bounded Promo x Channel2 adstock alongside Channel4 interaction	0.180753	0.028682
+10	367435e	69411.308230	0.693139	discard	use faster Channel2 adstock decay within ridge interaction champion	0.195090	0.038093

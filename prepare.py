@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import csv
 import os
 import re
+import textwrap
 
 
 # ── Constants ──────────────────────────────────────────────
@@ -131,6 +132,64 @@ def build_cumulative_results(session_ids=None, save_path=None):
 
     print(f"Saved {save_path}")
     return save_path
+
+
+def _short_phase_label(description, session_id=None, width=32):
+    label = description.replace("_", " ").strip()
+    replacements = [
+        ("Promo x", "promo x"),
+        ("Channel", "Ch"),
+        ("adstock", "carryover"),
+        ("bounded ", ""),
+        ("current champion", "champion"),
+        ("current interaction champion", "interaction champ"),
+        ("no-sentiment interaction champion", "no-sentiment champ"),
+        ("session start", "baseline"),
+    ]
+    for old, new in replacements:
+        label = label.replace(old, new)
+
+    wrapped = textwrap.fill(label, width=width)
+    return wrapped
+
+
+def _significant_improvement_points(rmses, statuses, descriptions, session_ids=None):
+    if len(rmses) < 2:
+        return []
+
+    min_improvement = 25.0
+    points = []
+    current_best = None
+
+    for idx, (rmse, status, description) in enumerate(zip(rmses, statuses, descriptions)):
+        if current_best is None:
+            current_best = rmse
+            continue
+
+        if status == "discard" or rmse >= current_best:
+            continue
+
+        improvement = current_best - rmse
+        current_best = rmse
+        if improvement < min_improvement:
+            continue
+
+        session_id = None if session_ids is None else session_ids[idx]
+        points.append({
+            "idx": idx,
+            "rmse": rmse,
+            "improvement": improvement,
+            "label": _short_phase_label(description, session_id=session_id),
+        })
+
+    if len(points) <= 7:
+        return points
+
+    top_indices = {
+        point["idx"]
+        for point in sorted(points, key=lambda p: p["improvement"], reverse=True)[:7]
+    }
+    return [point for point in points if point["idx"] in top_indices]
 
 
 def _adstock(series, decay):
@@ -332,7 +391,7 @@ def plot_results(results_file=None, save_path=None):
         return
 
     save_path = save_path or get_performance_file()
-    experiments, rmses, r2s, statuses, descriptions = [], [], [], [], []
+    experiments, rmses, r2s, statuses, descriptions, session_ids = [], [], [], [], [], []
     with open(results_file) as f:
         reader = csv.DictReader(f, delimiter="\t")
         for row in reader:
@@ -341,12 +400,13 @@ def plot_results(results_file=None, save_path=None):
             r2s.append(float(row["val_r2"]))
             statuses.append(row["status"])
             descriptions.append(row["description"])
+            session_ids.append(row.get("session_id", ""))
 
     # Colors: green=keep, red=discard, blue=baseline
     color_map = {"keep": "#2ecc71", "discard": "#e74c3c", "baseline": "#3498db"}
     colors = [color_map.get(s, "#95a5a6") for s in statuses]
 
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(11, 8), sharex=True)
+    fig, ax1 = plt.subplots(1, 1, figsize=(13, 8))
 
     # ── Outlier handling: clip axes to reasonable range ──
     q75 = np.percentile(rmses, 75)
@@ -387,45 +447,35 @@ def plot_results(results_file=None, save_path=None):
                 arrowprops=dict(arrowstyle="->", color="#e74c3c", lw=1.5),
             )
 
+    phase_points = _significant_improvement_points(rmses, statuses, descriptions, session_ids=session_ids)
+    phase_y_positions = np.linspace(
+        reasonable_max - rmse_span * 0.06,
+        reasonable_max - rmse_span * 0.68,
+        num=max(len(phase_points), 1),
+    )
+    for ypos, point in zip(phase_y_positions, phase_points):
+        ax1.annotate(
+            f"{point['label']}\nRMSE -{point['improvement']:.1f}",
+            xy=(point["idx"], point["rmse"]),
+            xytext=(point["idx"] + 0.8, ypos),
+            fontsize=10,
+            ha="left",
+            va="center",
+            bbox=dict(boxstyle="round,pad=0.25", fc="white", ec="#2c3e50", alpha=0.95),
+            arrowprops=dict(arrowstyle="->", color="#2c3e50", lw=1.0),
+        )
+
     ax1.set_ylabel("Validation RMSE (lower is better)", fontsize=12)
     ax1.set_title("AutoResearch Demo: Marketing Mix Modeling", fontsize=14, fontweight="bold")
     ax1.grid(True, alpha=0.3)
 
-    # ── Bottom: R² ──
-    ax2.scatter(range(len(r2s)), r2s, c=colors, s=80, zorder=3, edgecolors="white", linewidth=0.5)
-    ax2.plot(range(len(r2s)), r2s, "k--", alpha=0.2, zorder=2)
-
-    best_r2 = []
-    current_best_r2 = -float("inf")
-    for r in r2s:
-        current_best_r2 = max(current_best_r2, r)
-        best_r2.append(current_best_r2)
-    ax2.plot(range(len(r2s)), best_r2, color="#2ecc71", linewidth=2.5, label="Best so far")
-
-    # Clip y-axis for R² using a local padded range so small improvements are visible.
-    reasonable_r2_min = max(min(r2s), r2_lower)
-    visible_r2 = [r for r in r2s if r >= reasonable_r2_min]
-    r2_max = max(visible_r2)
-    r2_span = max(r2_max - reasonable_r2_min, 0.001)
-    r2_pad = max(r2_span * 0.2, 0.0005)
-    ax2.set_ylim(reasonable_r2_min - r2_pad, r2_max + r2_pad)
-    for i, r in enumerate(r2s):
-        if r < reasonable_r2_min:
-            ypos = ax2.get_ylim()[0] * 0.95
-            ax2.annotate(
-                f"{r:.1f}", xy=(i, ypos),
-                fontsize=8, ha="center", color="#e74c3c", fontweight="bold",
-            )
-
-    ax2.set_xlabel("Experiment #", fontsize=12)
-    ax2.set_ylabel("Validation R² (higher is better)", fontsize=12)
-    ax2.legend(fontsize=10)
-    ax2.grid(True, alpha=0.3)
-
-    # x-tick labels = short descriptions
-    short_labels = [d[:22] + ".." if len(d) > 24 else d for d in descriptions]
-    ax2.set_xticks(range(len(rmses)))
-    ax2.set_xticklabels(short_labels, rotation=45, ha="right", fontsize=8)
+    tick_step = max(1, len(rmses) // 10)
+    tick_positions = list(range(0, len(rmses), tick_step))
+    if tick_positions[-1] != len(rmses) - 1:
+        tick_positions.append(len(rmses) - 1)
+    ax1.set_xticks(tick_positions)
+    ax1.set_xticklabels([str(i + 1) for i in tick_positions], fontsize=8)
+    ax1.set_xlabel("Experiment #", fontsize=12)
 
     # Legend for status colors
     from matplotlib.lines import Line2D
