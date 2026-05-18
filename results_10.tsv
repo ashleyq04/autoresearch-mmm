@@ -1,0 +1,9 @@
+experiment	val_rmse	val_r2	status	description	runtime_sec	train_time_sec
+367435e	69369.566914	0.693507	baseline	session start	0.202389	0.042415
+367435e	69460.800440	0.692701	discard	reintroduce sentiment control to current interaction champion	0.168990	0.014422
+367435e	69368.834798	0.693514	keep	apply very light bounded ridge to no-sentiment interaction champion	0.173380	0.026502
+367435e	69367.065355	0.693530	keep	increase bounded ridge strength on no-sentiment interaction champion	0.184201	0.038404
+367435e	69373.629977	0.693472	discard	increase bounded ridge strength further on no-sentiment interaction champion	0.169741	0.029826
+367435e	69367.720442	0.693524	discard	slightly reduce bounded ridge strength on no-sentiment interaction champion	0.248166	0.065172
+367435e	69399.533295	0.693243	discard	add bounded Promo x Channel2 adstock alongside Channel4 interaction	0.180753	0.028682
+367435e	69411.308230	0.693139	discard	use faster Channel2 adstock decay within ridge interaction champion	0.195090	0.038093

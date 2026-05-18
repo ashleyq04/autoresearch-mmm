@@ -66,6 +66,12 @@ As a result, Sessions 1-6 should be interpreted as runs under the original narro
 
 Session 7 is also a transition point in a second sense: it was the first session allowed to try custom promotion-media interaction features inside `model.py`. That session found a better-RMSE model, but it also showed that a custom post-preprocessor feature can make coefficient reporting harder to audit with the existing frozen `run.py` output. For that reason, the agent rules were tightened again after Session 7 so future sessions must preserve a clear, recoverable mapping between each final engineered feature and its coefficient before a model can be kept.
 
+## Reporting Note
+
+On May 18, 2026, `run.py` was updated to improve coefficient reporting for models that add engineered features after preprocessing (such as sparse promotion-media interaction terms). This change was a reporting and interpretability fix only: it did **not** modify the dataset, train/validation split, evaluation metric, or model search space, so previously logged validation RMSE and keep/discard decisions remain comparable across sessions.
+
+Earlier sessions should therefore be interpreted as having fully valid performance results, but potentially less reliable printed coefficient-name alignment for models with post-preprocessor engineered features.
+
 ---
 
 ## How to Run the Agent Loop
@@ -88,33 +94,6 @@ Then enter the AutoResearch loop:
 
 After all iterations, run `python prepare.py` to generate `performance_<n>.png`.
 Print a summary table of all experiments and which were kept vs discarded.
-```
-
-### More specific prompt (if you want to control the search)
-
-```
-You are an AutoResearch agent. Read program.md for rules.
-
-Your job: minimize val_rmse on marketing-generated revenue predictions by modifying model.py.
-
-Constraints:
-- model.py must define build_model() returning an sklearn estimator
-- Do NOT modify prepare.py or run.py
-- Each experiment must finish in < 60 seconds
-
-Search strategy:
-1. Start from the current accepted model in `model.py`
-2. Try regularized linear models and constrained shrinkage if they remain interpretable
-3. Try transformations defined in program.md, including systematic feature selection and approved promotion-media interactions
-
-For each experiment:
-- Run: python run.py "<description>"
-- Read the logged status from the active `results_<n>.tsv`
-- If status=keep → keep the change
-- If status=discard → revert model.py to previous version
-- Log your reasoning for each decision
-
-After finishing, run: python prepare.py
 ```
 
 ---

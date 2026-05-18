@@ -88,9 +88,20 @@ def main():
     # 4. Evaluate
     val_rmse, val_r2 = evaluate(model, X_val, y_val)
 
-    # Get expanded feature names after preprocessing
+    # Get feature names for the final design matrix seen by the fitted model.
+    # This keeps coefficient reporting aligned even if intermediate pipeline
+    # steps add or reorder traceable engineered features.
     preprocessor = model.named_steps["preprocessor"]
     expanded_feature_names = preprocessor.get_feature_names_out()
+    passed_preprocessor = False
+    for step_name, step in model.named_steps.items():
+        if step_name == "preprocessor":
+            passed_preprocessor = True
+            continue
+        if not passed_preprocessor or step_name == "model":
+            continue
+        if hasattr(step, "get_feature_names_out"):
+            expanded_feature_names = step.get_feature_names_out(expanded_feature_names)
 
     coefs = model.named_steps["model"].coef_
     intercept = model.named_steps["model"].intercept_

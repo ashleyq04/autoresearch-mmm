@@ -156,9 +156,10 @@ def build_model():
         ),
         (
             "model",
-            BoundedLinearRegression(
+            BoundedRidgeRegression(
                 nonnegative_start_idx=geo_feature_count,
                 nonnegative_feature_count=media_feature_count + len(interaction_pairs),
+                alpha=0.05,
             ),
         ),
     ])
