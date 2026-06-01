@@ -15,6 +15,14 @@ session_id	experiment	val_rmse	val_r2	status	description	runtime_sec	train_time_
 5	7c0dac3	69577.322385	0.691669	keep	use faster adstock decay 0.3 for Channel3 and Channel4	0.115856	0.022555
 5	7c0dac3	69595.681858	0.691506	discard	use faster adstock decay 0.3 for Channel2 Channel3 and Channel4	0.153936	0.028138
 5	7c0dac3	69617.535390	0.691312	discard	use faster adstock decay 0.3 for Channel0 Channel3 and Channel4	0.125440	0.030162
+6	7bd3a12	69577.322385	0.691669	baseline	session start	0.391934	0.029171
+6	7bd3a12	69577.322385	0.691669	discard	add raw Channel2 spend to mixed adstock champion	0.224430	0.069759
+6	7bd3a12	69577.322385	0.691669	discard	add raw Channel4 spend to mixed adstock champion	0.156321	0.032526
+6	7bd3a12	69577.322385	0.691669	discard	add raw Channel1 spend to mixed adstock champion	0.153081	0.027752
+6	7bd3a12	69611.630546	0.691365	discard	add Channel2 lag on top of Channel2 adstock 0.7	0.235560	0.077023
+6	7bd3a12	69618.959683	0.691300	discard	use faster adstock decay 0.3 for Channel1	0.162259	0.023806
+6	7bd3a12	69617.369496	0.691314	discard	use slower adstock decay 0.7 for Channel4	0.236283	0.088487
+6	7bd3a12	69577.322385	0.691669	discard	replace raw Channel3 spend with log1p Channel3 spend	0.186636	0.032714
 7	7bd3a12	69577.322385	0.691669	baseline	session start	0.230365	0.059880
 7	7bd3a12	71583.781845	0.673629	discard	add Promo x Channel3 adstock 0.3 interaction	0.153739	0.029250
 7	7bd3a12	69946.370890	0.688389	discard	apply bounded ridge shrinkage to current champion features	0.211516	0.062470

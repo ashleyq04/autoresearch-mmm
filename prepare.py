@@ -15,7 +15,7 @@ import textwrap
 SESSION_MARKER_FILE = ".current_session"
 RESULTS_FILE_TEMPLATE = "results_{session_id}.tsv"
 PERFORMANCE_FILE_TEMPLATE = "performance_{session_id}.png"
-CURATED_CUMULATIVE_SESSIONS = [3, 5, 7, 8]
+CURATED_CUMULATIVE_SESSIONS = [3, 5, 6, 7, 8, 9, 10]
 CURATED_CUMULATIVE_RESULTS_FILE = "results_cumulative.tsv"
 CURATED_CUMULATIVE_PERFORMANCE_FILE = "performance_cumulative.png"
 
@@ -151,6 +151,35 @@ def _short_phase_label(description, session_id=None, width=32):
 
     wrapped = textwrap.fill(label, width=width)
     return wrapped
+
+
+def _short_model_label(description):
+    label = description.strip()
+    replacements = [
+        ("current champion", "linear champion"),
+        ("current interaction champion", "interaction champion"),
+        ("no-sentiment interaction champion", "no-sentiment champion"),
+        ("bounded ridge alpha 1 no-sentiment interaction champion", "bounded ridge"),
+        ("bounded ridge alpha 0.5 no-sentiment interaction champion", "bounded ridge"),
+        ("bounded ridge alpha 2 no-sentiment interaction champion", "bounded ridge"),
+    ]
+    lowered = label.lower()
+    for old, new in replacements:
+        if lowered == old:
+            return new
+    if "ridge" in lowered:
+        return "bounded ridge" if "bounded" in lowered else "ridge"
+    if "lasso" in lowered:
+        return "lasso"
+    if "elasticnet" in lowered or "elastic net" in lowered:
+        return "elastic net"
+    if "interaction" in lowered:
+        return "interaction model"
+    if "carryover" in lowered or "adstock" in lowered:
+        return "carryover model"
+    if "baseline" in lowered:
+        return "baseline"
+    return textwrap.shorten(label, width=24, placeholder="...")
 
 
 def _significant_improvement_points(rmses, statuses, descriptions, session_ids=None):
@@ -434,8 +463,10 @@ def plot_results(results_file=None, save_path=None):
     visible_rmse = [r for r in rmses if r <= reasonable_max]
     rmse_min = min(visible_rmse)
     rmse_span = max(reasonable_max - rmse_min, 1.0)
-    rmse_pad = max(rmse_span * 0.2, 5.0)
-    ax1.set_ylim(rmse_min - rmse_pad, reasonable_max + rmse_pad)
+    rmse_pad_upper = max(rmse_span * 0.2, 5.0)
+    rmse_pad_lower = max(rmse_span * 0.06, 2.5)
+    ax1.set_ylim(rmse_min - rmse_pad_lower, reasonable_max + rmse_pad_upper)
+    y_top = reasonable_max + rmse_pad_upper
     for i, r in enumerate(rmses):
         if r > reasonable_max:
             ax1.annotate(
@@ -446,6 +477,30 @@ def plot_results(results_file=None, save_path=None):
                 "", xy=(i, reasonable_max * 1.08), xytext=(i, reasonable_max * 1.02),
                 arrowprops=dict(arrowstyle="->", color="#e74c3c", lw=1.5),
             )
+
+    # If the initial baseline sits above the plotted window, add a top-edge marker
+    # and label so the best-so-far line does not appear to start off-canvas.
+    if rmses and statuses and statuses[0] == "baseline" and rmses[0] > reasonable_max:
+        baseline_marker_y = y_top - rmse_pad_upper * 0.08
+        ax1.scatter(
+            [0],
+            [baseline_marker_y],
+            c=["#3498db"],
+            s=95,
+            zorder=4,
+            edgecolors="white",
+            linewidth=0.7,
+        )
+        ax1.annotate(
+            f"Initial baseline off-scale\nRMSE {rmses[0]:.1f}",
+            xy=(0, baseline_marker_y),
+            xytext=(1.0, y_top - rmse_pad_upper * 0.35),
+            fontsize=9,
+            ha="left",
+            va="center",
+            bbox=dict(boxstyle="round,pad=0.25", fc="white", ec="#3498db", alpha=0.95),
+            arrowprops=dict(arrowstyle="->", color="#3498db", lw=1.1),
+        )
 
     phase_points = _significant_improvement_points(rmses, statuses, descriptions, session_ids=session_ids)
     phase_y_positions = np.linspace(
@@ -465,8 +520,38 @@ def plot_results(results_file=None, save_path=None):
             arrowprops=dict(arrowstyle="->", color="#2c3e50", lw=1.0),
         )
 
+    chosen_idx = None
+    for idx in range(len(rmses) - 1, -1, -1):
+        if statuses[idx] in {"keep", "baseline"} and rmses[idx] == min(best_so_far):
+            chosen_idx = idx
+            break
+
+    if chosen_idx is not None:
+        chosen_x = chosen_idx
+        chosen_y = rmses[chosen_idx]
+        chosen_label = _short_model_label(descriptions[chosen_idx])
+        ax1.scatter(
+            [chosen_x],
+            [chosen_y],
+            s=170,
+            facecolors="none",
+            edgecolors="#1f2d3d",
+            linewidth=1.8,
+            zorder=5,
+        )
+        ax1.annotate(
+            f"Final chosen model\nRMSE {chosen_y:.1f} ({chosen_label})",
+            xy=(chosen_x, chosen_y),
+            xytext=(chosen_x + 0.9, chosen_y + rmse_span * 0.08),
+            fontsize=9,
+            ha="left",
+            va="bottom",
+            bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="#1f2d3d", alpha=0.95),
+            arrowprops=dict(arrowstyle="->", color="#1f2d3d", lw=1.0),
+        )
+
     ax1.set_ylabel("Validation RMSE (lower is better)", fontsize=12)
-    ax1.set_title("AutoResearch Demo: Marketing Mix Modeling", fontsize=14, fontweight="bold")
+    ax1.set_title("Validation RMSE Across AutoResearch Experiments", fontsize=14, fontweight="bold")
     ax1.grid(True, alpha=0.3)
 
     tick_step = max(1, len(rmses) // 10)
