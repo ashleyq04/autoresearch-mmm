@@ -7,7 +7,7 @@ This memo summarizes the model changes that genuinely improved validation RMSE i
 ## Best Result vs. Baseline
 
 - Baseline reference RMSE: `73397.180606`
-- Current best RMSE: `69452.274146`
+- Current best RMSE: `69367.065355`
 
 ## What Actually Worked
 
@@ -29,7 +29,11 @@ By Session 8, the raw `Channel3_spend` term was consistently being driven to a c
 
 ### 5. Adding one sparse, business-readable promotion-media interaction
 
-The best final improvement came from a single bounded interaction between `Promo` and `Channel4_spend_adstock_03`. This means the model fit improved when it was allowed to represent the idea that Channel 4 media may work differently during promotional periods. Importantly, this only worked when the interaction stayed sparse and clearly tied to one channel.
+One of the last meaningful structural improvements came from a single bounded interaction between `Promo` and `Channel4_spend_adstock_03`. This means the model fit improved when it was allowed to represent the idea that Channel 4 media may work differently during promotional periods. Importantly, this only worked when the interaction stayed sparse and clearly tied to one channel.
+
+### 6. Adding mild bounded ridge regularization to the final interaction model
+
+The final improvement in the repo came from applying light bounded ridge regularization to the no-sentiment interaction champion. This preserved the compact interpretable structure while slightly improving validation RMSE from the earlier interaction-based best of `69452.274146` to the final best of `69367.065355`.
 
 ## What This Suggests
 

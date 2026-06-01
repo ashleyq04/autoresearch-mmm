@@ -114,10 +114,9 @@ python -c "from prepare import build_cumulative_artifacts; build_cumulative_arti
 # Generates results_cumulative.tsv and performance_cumulative.png
 ```
 
-This produces a two-panel chart:
-- **Top**: validation RMSE over iterations (green = keep, red = discard, blue = baseline)
-- **Bottom**: validation R² over iterations
-- **Green line**: best-so-far envelope
+This produces a single-panel chart:
+- validation RMSE over iterations (green = keep, red = discard, blue = baseline)
+- green best-so-far envelope
 
 ## Baseline vs Current Model
 

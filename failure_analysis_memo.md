@@ -31,7 +31,9 @@ The largest gains came from two changes:
 
 That reduced RMSE to `69643.239067`.
 
-In Session 5, the model improved further by simplifying raw spend terms and tuning carryover separately for some channels. The best model in the current repo reached validation RMSE `69577.322385`.
+In Session 5, the model improved further by simplifying raw spend terms and tuning carryover separately for some channels, reducing RMSE to `69577.322385`.
+
+Later sessions made two additional improvements. Session 7 added one sparse bounded `Promo x Channel4_spend_adstock_03` interaction and reduced RMSE to `69452.274146`. Session 10 then applied mild bounded ridge regularization to that compact interaction-based model and produced the final best validation RMSE in the repo: `69367.065355`.
 
 ## What Failed and What We Learned
 

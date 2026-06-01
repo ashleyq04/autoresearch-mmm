@@ -18,8 +18,9 @@ This produces `report/main.pdf`.
 
 - `main.tex`: report source
 - `neurips_2026.sty`: professor-provided style file used by `main.tex`
-- `checklist.tex`: NeurIPS checklist included at the end of the paper
+- `checklist.tex`: separate NeurIPS checklist file retained alongside the report
 - `figures/cumulative_rmse.pdf`: report-local experiment trajectory figure
 - `figures/cumulative_rmse.png`: PNG version of the same figure
+- `figures/performance_cumulative_clean.png`: cleaned cumulative RMSE trajectory figure for the report
 
 No bibliography tool is required because references are written directly in `main.tex`.
