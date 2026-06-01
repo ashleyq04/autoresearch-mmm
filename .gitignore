@@ -16,3 +16,14 @@ __pycache__/
 
 #Ignore
 w1-workflowdiagram.html
+
+# LaTeX build artifacts
+*.aux
+*.log
+*.out
+*.toc
+*.bbl
+*.blg
+*.fls
+*.fdb_latexmk
+*.synctex.gz
